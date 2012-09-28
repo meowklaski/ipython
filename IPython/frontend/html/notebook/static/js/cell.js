@@ -31,7 +31,16 @@ var IPython = (function (IPython) {
 
     // Subclasses must implement create_element.
     Cell.prototype.create_element = function () {};
-
+    
+    Cell.prototype.hct = function (num){
+    var that=this;
+        IPython.notebook.kernel.history_request(0,
+            function(arg){
+               that.code_mirror.setValue( 
+                arg.history[num][2]
+                )
+            });
+    }
 
     Cell.prototype.bind_events = function () {
         var that = this;

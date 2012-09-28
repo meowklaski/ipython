@@ -34,7 +34,27 @@ var IPython = (function (IPython) {
         };
     };
 
+    Kernel.prototype.history_request = function (hist_line, callback) {
+        // from http://ipython.org/ipython-doc/dev/development/messaging.html#history
+        var callbacks = {
+            'history_reply': callback
+        }
+        var content = {
+            output : true,
+            raw : true,
+            hist_access_type : 'range',
+            'start' : 0,
+            'stop' : 100,
+            session: 0,
+            'output': false
+        };
+        var msg = this._get_msg("history_request", content);
+        this.shell_channel.send(JSON.stringify(msg));
+        this.set_callbacks_for_msg(msg.header.msg_id, callbacks);
+        return msg.content;
+    }
 
+    
     Kernel.prototype._get_msg = function (msg_type, content) {
         var msg = {
             header : {

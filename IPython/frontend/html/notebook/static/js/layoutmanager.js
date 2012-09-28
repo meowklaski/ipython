@@ -21,38 +21,11 @@ var IPython = (function (IPython) {
     };
 
     LayoutManager.prototype.app_height = function() {
-        var win = $(window);
-        var w = win.width();
-        var h = win.height();
-        var header_height;
-        if ($('div#header').css('display') === 'none') {
-            header_height = 0;
-        } else {
-            header_height = $('div#header').outerHeight(true);
-        }
-        var menubar_height = $('div#menubar').outerHeight(true);
-        var toolbar_height;
-        if ($('div#toolbar').css('display') === 'none') {
-            toolbar_height = 0;
-        } else {
-            toolbar_height = $('div#toolbar').outerHeight(true);
-        }
-        return h-header_height-menubar_height-toolbar_height;  // content height
+
     }
 
     LayoutManager.prototype.do_resize = function () {
-        var app_height = this.app_height()  // content height
 
-        $('div#main_app').height(app_height);  // content+padding+border height
-
-        var pager_height = IPython.pager.percentage_height*app_height;
-        var pager_splitter_height = $('div#pager_splitter').outerHeight(true);
-        $('div#pager').height(pager_height);
-        if (IPython.pager.expanded) {
-            $('div#notebook').height(app_height-pager_height-pager_splitter_height);
-        } else {
-            $('div#notebook').height(app_height-pager_splitter_height);
-        }
     };
 
     IPython.LayoutManager = LayoutManager;
