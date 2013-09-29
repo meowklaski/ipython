@@ -33,6 +33,7 @@ import glob
 import logging
 import os
 import shutil
+import json
 import sys
 
 from IPython.config.application import Application, catch_config_error
@@ -358,30 +359,32 @@ class BaseIPythonApplication(Application):
 
 
     def stage_default_config_file(self):
+    def stage_default_config_file(self, types=('python')):
         """auto generate default config file, and stage it into the profile."""
-        import json
-        fname = os.path.join(self.profile_dir.location, self.config_file_name)
-        if self.overwrite or not os.path.exists(fname):
-            s = self.generate_config_file()
-            self.log.warn("Generating default config file: %r"%(fname))
-            with open(fname, 'w') as f:
-                f.write(s)
 
-        fname = os.path.join(self.profile_dir.location, self.config_file_name[:-2]+'json')
-        if self.overwrite or not os.path.exists(fname):
-            j = self.generate_json_config_file()
-            self.log.warn("Generating default config file: %r"%(fname))
-            fc = {}
-            for cls,item in j.iteritems():
-                fc[cls] = {}
-                for trait,tv in item['traits'].iteritems() :
-                    fc[cls][trait] = tv['default']
-            with open(fname, 'w') as f:
-                json.dump({
-                            'version': 0.1,
-                            'config' : fc
-                            },
-                        f,indent=2)
+        if 'python' in types:
+            fname = os.path.join(self.profile_dir.location, self.config_file_name)
+            if self.overwrite or not os.path.exists(fname):
+                s = self.generate_config_file()
+                self.log.warn("Generating default config file: %r"%(fname))
+                with open(fname, 'w') as f:
+                    f.write(s)
+        if 'json' in types:
+            fname = os.path.join(self.profile_dir.location, self.config_file_name[:-2]+'json')
+            if self.overwrite or not os.path.exists(fname):
+                j = self.generate_json_config_file()
+                self.log.warn("Generating default config file: %r"%(fname))
+                fc = {}
+                for cls,item in j.iteritems():
+                    fc[cls] = {}
+                    for trait,tv in item['traits'].iteritems() :
+                        fc[cls][trait] = tv['default']
+                with open(fname, 'w') as f:
+                    json.dump({
+                                'version': 0.1,
+                                'config' : fc
+                                },
+                            f,indent=2)
 
     @catch_config_error
     def initialize(self, argv=None):

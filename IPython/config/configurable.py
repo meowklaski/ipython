@@ -271,8 +271,6 @@ class Configurable(HasTraits):
             d[cls.__name__]['traits'][name]['info'] = trait.info()
             d[cls.__name__]['traits'][name]['class'] = trait.__class__.__name__
 
-
-        from copy import deepcopy
         return deepcopy(d)
 
 
@@ -285,7 +283,6 @@ class Configurable(HasTraits):
         def c(s):
             """return a commented, wrapped block."""
             s = '\n\n'.join(wrap_paragraphs(s, 78))
-
             return '# ' + s.replace('\n', '\n# ')
 
         # section header
@@ -312,7 +309,6 @@ class Configurable(HasTraits):
             lines.append('# c.%s.%s = %r'%(cls.__name__, name, trait.get('default')))
             lines.append('')
         return '\n'.join(lines)
-
 
 
 class SingletonConfigurable(Configurable):
