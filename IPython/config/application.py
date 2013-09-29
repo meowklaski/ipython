@@ -527,6 +527,13 @@ class Application(SingletonConfigurable):
             lines.append(cls.class_config_section())
         return '\n'.join(lines)
 
+    def generate_json_config_file(self):
+        """generate default config file from Configurables"""
+        config = {}
+        for cls in self.classes:
+            config.update(cls.json_config_section())
+        return config
+
     def exit(self, exit_status=0):
         self.log.debug("Exiting application: %s" % self.name)
         sys.exit(exit_status)

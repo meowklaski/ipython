@@ -234,6 +234,36 @@ class Configurable(HasTraits):
         print cls.class_get_help(inst)
 
     @classmethod
+    def json_config_section(cls):
+        d = {cls.__name__:{}}
+        d[cls.__name__]['traits'] = {}
+
+        desc = cls.class_traits().get('description')
+        if desc:
+            desc = desc.default_value
+        else:
+            # no description trait, use __doc__
+            desc = getattr(cls, '__doc__', '')
+
+        if desc:
+            d[cls.__name__]['description'] = desc.split('\n')
+        else:
+            d[cls.__name__]['description'] = ['<no description>']
+
+        for name, trait in cls.class_traits(config=True).iteritems():
+            help = trait.get_metadata('help') or ''
+            d[cls.__name__]['traits'][name] = {}
+            if help: 
+                d[cls.__name__]['traits'][name]['help'] = help.split('\n')
+                d[cls.__name__]['traits'][name]['default'] = trait.get_default_value()
+
+        import json
+        print cls.__name__,name,trait.get_default_value()
+        print json.dumps(d, indent=2)
+        return d
+
+
+    @classmethod
     def class_config_section(cls):
         """Get the config class config section"""
         def c(s):

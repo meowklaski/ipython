@@ -359,12 +359,19 @@ class BaseIPythonApplication(Application):
 
     def stage_default_config_file(self):
         """auto generate default config file, and stage it into the profile."""
-        s = self.generate_config_file()
+        import json
         fname = os.path.join(self.profile_dir.location, self.config_file_name)
         if self.overwrite or not os.path.exists(fname):
+            s = self.generate_config_file()
             self.log.warn("Generating default config file: %r"%(fname))
             with open(fname, 'w') as f:
                 f.write(s)
+        fname = os.path.join(self.profile_dir.location, self.config_file_name[:-2]+'json')
+        if self.overwrite or not os.path.exists(fname):
+            j = self.generate_json_config_file()
+            self.log.warn("Generating default config file: %r"%(fname))
+            with open(fname, 'w') as f:
+                json.dump(j,f,indent=2)
 
     @catch_config_error
     def initialize(self, argv=None):
