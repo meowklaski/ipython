@@ -26,6 +26,8 @@ Authors:
 #-----------------------------------------------------------------------------
 
 import datetime
+import json
+from collections import OrderedDict
 from copy import deepcopy
 
 from loader import Config
@@ -246,46 +248,7 @@ class Configurable(HasTraits):
             desc = getattr(cls, '__doc__', '')
 
         if desc:
-            d[cls.__name__]['description'] = desc.split('\n')
-        else:
-            d[cls.__name__]['description'] = ['<no description>']
-
-        for name, trait in cls.class_traits(config=True).iteritems():
-            help = trait.get_metadata('help') or ''
-            d[cls.__name__]['traits'][name] = {}
-            if help: 
-                d[cls.__name__]['traits'][name]['help'] = help.split('\n')
-                d[cls.__name__]['traits'][name]['default'] = trait.get_default_value()
-
-        import json
-        print cls.__name__,name,trait.get_default_value()
-        print json.dumps(d, indent=2)
-        return d
-
-
-    @classmethod
-    def class_config_section(cls):
-        """Get the config class config section"""
-        def c(s):
-            """return a commented, wrapped block."""
-            s = '\n\n'.join(wrap_paragraphs(s, 78))
-
-            return '# ' + s.replace('\n', '\n# ')
-
-        # section header
-        breaker = '#' + '-'*78
-        s = "# %s configuration" % cls.__name__
-        lines = [breaker, s, breaker, '']
-        # get the description trait
-        desc = cls.class_traits().get('description')
-        if desc:
-            desc = desc.default_value
-        else:
-            # no description trait, use __doc__
-            desc = getattr(cls, '__doc__', '')
-        if desc:
-            lines.append(c(desc))
-            lines.append('')
+            d[cls.__name__]['description'] = desc
 
         parents = []
         for parent in cls.mro():
@@ -297,14 +260,55 @@ class Configurable(HasTraits):
                 parents.append(parent)
 
         if parents:
-            pstr = ', '.join([ p.__name__ for p in parents ])
-            lines.append(c('%s will inherit config from: %s'%(cls.__name__, pstr)))
-            lines.append('')
+            d[cls.__name__]['parents'] = [ p.__name__ for p in parents ]
 
         for name, trait in cls.class_traits(config=True).iteritems():
             help = trait.get_metadata('help') or ''
+            d[cls.__name__]['traits'][name] = {}
+            if help:
+                d[cls.__name__]['traits'][name]['help'] = help
+                d[cls.__name__]['traits'][name]['default'] = trait.get_default_value()
+
+
+        from copy import deepcopy
+#        print json.dumps(d, indent=2)
+        return deepcopy(d)
+
+
+    @classmethod
+    def class_config_section(cls):
+        """Get the config class config section"""
+        j = cls.json_config_section()
+        d = j[cls.__name__]
+
+        def c(s):
+            """return a commented, wrapped block."""
+            s = '\n\n'.join(wrap_paragraphs(s, 78))
+
+            return '# ' + s.replace('\n', '\n# ')
+
+        # section header
+        breaker = '#' + '-'*78
+        s = "# %s configuration" % cls.__name__
+        lines = [breaker, s, breaker, '']
+        # get the description trait
+        desc = d.get('description')
+
+        if desc:
+            lines.append(c(desc))
+            lines.append('')
+
+        parents = d.get('parents')
+
+        if parents:
+            pstr = ', '.join(parents)
+            lines.append(c('%s will inherit config from: %s'%(cls.__name__, pstr)))
+            lines.append('')
+
+        for name, trait in d['traits'].iteritems():
+            help = trait.get('help') or ''
             lines.append(c(help))
-            lines.append('# c.%s.%s = %r'%(cls.__name__, name, trait.get_default_value()))
+            lines.append('# c.%s.%s = %r'%(cls.__name__, name, trait.get('default')))
             lines.append('')
         return '\n'.join(lines)
 
