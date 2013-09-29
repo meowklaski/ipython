@@ -366,12 +366,22 @@ class BaseIPythonApplication(Application):
             self.log.warn("Generating default config file: %r"%(fname))
             with open(fname, 'w') as f:
                 f.write(s)
+
         fname = os.path.join(self.profile_dir.location, self.config_file_name[:-2]+'json')
         if self.overwrite or not os.path.exists(fname):
             j = self.generate_json_config_file()
             self.log.warn("Generating default config file: %r"%(fname))
+            fc = {}
+            for cls,item in j.iteritems():
+                fc[cls] = {}
+                for trait,tv in item['traits'].iteritems() :
+                    fc[cls][trait] = tv['default']
             with open(fname, 'w') as f:
-                json.dump(j,f,indent=2)
+                json.dump({
+                            'version': 0.1,
+                            'config' : fc
+                            },
+                        f,indent=2)
 
     @catch_config_error
     def initialize(self, argv=None):

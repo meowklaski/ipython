@@ -531,7 +531,7 @@ class Application(SingletonConfigurable):
         """generate default config file from Configurables"""
         config = {}
         for cls in self.classes:
-            config.update(cls.json_config_section())
+            config.update(cls.jsonable_config_section())
         return config
 
     def exit(self, exit_status=0):

@@ -236,9 +236,9 @@ class Configurable(HasTraits):
         print cls.class_get_help(inst)
 
     @classmethod
-    def json_config_section(cls):
+    def jsonable_config_section(cls):
         d = {cls.__name__:{}}
-        d[cls.__name__]['traits'] = {}
+        d[cls.__name__]['traits'] = OrderedDict()
 
         desc = cls.class_traits().get('description')
         if desc:
@@ -267,18 +267,19 @@ class Configurable(HasTraits):
             d[cls.__name__]['traits'][name] = {}
             if help:
                 d[cls.__name__]['traits'][name]['help'] = help
-                d[cls.__name__]['traits'][name]['default'] = trait.get_default_value()
+            d[cls.__name__]['traits'][name]['default'] = trait.get_default_value()
+            d[cls.__name__]['traits'][name]['info'] = trait.info()
+            d[cls.__name__]['traits'][name]['class'] = trait.__class__.__name__
 
 
         from copy import deepcopy
-#        print json.dumps(d, indent=2)
         return deepcopy(d)
 
 
     @classmethod
     def class_config_section(cls):
         """Get the config class config section"""
-        j = cls.json_config_section()
+        j = cls.jsonable_config_section()
         d = j[cls.__name__]
 
         def c(s):
