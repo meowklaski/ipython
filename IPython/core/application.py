@@ -358,7 +358,6 @@ class BaseIPythonApplication(Application):
                     )
 
 
-    def stage_default_config_file(self):
     def stage_default_config_file(self, types=('python')):
         """auto generate default config file, and stage it into the profile."""
 
