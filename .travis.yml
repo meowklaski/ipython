@@ -5,7 +5,9 @@ python:
     - 2.7
     - 3.3
 env:
-    - GROUP=js
+    - GROUP=js1
+    - GROUP=js2
+    - GROUP=js3
     - GROUP=
 before_install:
     # workaround for https://github.com/travis-ci/travis-cookbooks/issues/155
@@ -26,4 +28,9 @@ script:
 matrix:
     exclude:
         - python: 3.3
-          env: GROUP=js
+          env: GROUP=js1
+        - python: 3.3
+          env: GROUP=js2
+        - python: 3.3
+          env: GROUP=js3
+
