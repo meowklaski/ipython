@@ -430,13 +430,8 @@ def prepare_controllers(options):
     import pdb; pdb.set_trace()
     if testgroups:
         alljs = all_js_groups()
-
-        if 'js' in testgroups:
-            js_testgroups = [g for g in testgroups if g.startswith(testgroups)]
-        else:
-            js_testgroups = [g for g in testgroups if g.startswith(js_prefix)]
-        
-        py_testgroups = [g for g in testgroups if g not in ['js1','js2','js3'] + js_testgroups]
+        js_testgroups = [g for g in testgroups if g.startswith(js_prefix)]
+        py_testgroups = [g for g in testgroups if g not in alljs]
     else:
         py_testgroups = py_test_group_names
         if not options.all:
