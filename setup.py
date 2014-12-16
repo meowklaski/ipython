@@ -70,7 +70,6 @@ from setupbase import (
     require_submodules,
     UpdateSubmodules,
     get_bdist_wheel,
-    CompileCSS,
     JavascriptVersion,
     css_js_prerelease,
     install_symlinked,
