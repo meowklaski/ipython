@@ -12,6 +12,10 @@ dependencies:
     - sudo add-apt-repository -y ppa:marutter/c2d4u
     - sudo apt-get update
     - sudo apt-get install pandoc  libzmq-dev
+checkout:
+  post:
+    - git submodule sync
+    - git submodule update --init
 
 test:
   override:
