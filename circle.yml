@@ -8,7 +8,7 @@ dependencies:
     - git clone --quiet --depth 1 https://github.com/minrk/travis-wheels travis-wheels
     - pip install ipython[all]
     - pip install requests
-    - pip install jsonschema matplotlib mistune numpy qt
+    - pip install jsonschema mistune
     - sudo add-apt-repository -y ppa:marutter/c2d4u
     - sudo apt-get update
     - sudo apt-get install pandoc  libzmq-dev
