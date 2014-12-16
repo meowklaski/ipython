@@ -234,7 +234,6 @@ setup_args['cmdclass'] = {
     'sdist' : css_js_prerelease(git_prebuild('IPython', sdist)),
     'upload_wininst' : UploadWindowsInstallers,
     'submodule' : UpdateSubmodules,
-    'css' : CompileCSS,
     'symlink': install_symlinked,
     'install_lib_symlink': install_lib_symlink,
     'install_scripts_sym': install_scripts_for_symlink,

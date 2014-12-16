@@ -684,34 +684,6 @@ def get_bdist_wheel():
 # Notebook related
 #---------------------------------------------------------------------------
 
-class CompileCSS(Command):
-    """Recompile Notebook CSS
-    
-    Regenerate the compiled CSS from LESS sources.
-    
-    Requires various dev dependencies, such as invoke and lessc.
-    """
-    description = "Recompile Notebook CSS"
-    user_options = [
-        ('minify', 'x', "minify CSS"),
-        ('force', 'f', "force recompilation of CSS"),
-    ]
-    
-    def initialize_options(self):
-        self.minify = False
-        self.force = False
-    
-    def finalize_options(self):
-        self.minify = bool(self.minify)
-        self.force = bool(self.force)
-    
-    def run(self):
-        cmd = ['invoke', 'css']
-        if self.minify:
-            cmd.append('--minify')
-        if self.force:
-            cmd.append('--force')
-        check_call(cmd, cwd=pjoin(repo_root, "IPython", "html"))
 
 
 class JavascriptVersion(Command):
