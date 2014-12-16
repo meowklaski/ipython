@@ -7,11 +7,13 @@ dependencies:
     - sudo rm -rf /dev/shm && sudo ln -s /run/shm /dev/shm
     - git clone --quiet --depth 1 https://github.com/minrk/travis-wheels travis-wheels
     - pip install ipython[all]
+    - pip install requests
+    - pip install jsonschema matplotlib mistune numpy qt
     - sudo add-apt-repository -y ppa:marutter/c2d4u
     - sudo apt-get update
-    - sudo apt-get install pandoc  libzmq3-dev
+    - sudo apt-get install pandoc  libzmq-dev
 
 test:
   override:
-    - cd /tmp && iptest $GROUP
+    - cd /tmp && iptest $GROUP && cd -
 
