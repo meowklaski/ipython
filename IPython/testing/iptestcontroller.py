@@ -427,7 +427,6 @@ def prepare_controllers(options):
     """Returns two lists of TestController instances, those to run, and those
     not to run."""
     testgroups = options.testgroups
-    import pdb; pdb.set_trace()
     if testgroups:
         alljs = all_js_groups()
         js_testgroups = [g for g in testgroups if g.startswith(js_prefix)]
