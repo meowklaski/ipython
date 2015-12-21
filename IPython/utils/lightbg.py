@@ -23,10 +23,10 @@ class LightBGStyle(Style):
     default_style = ""
 
     styles = defaultdict(lambda:'italic #FF0000',{
-        Token.InPrompt.Number:     "bold #0000BB", 
-        Token.InPrompt.Color :     "bold #0000BB", 
-        Token.OutPrompt.Number:    "bold #BB0000",
-        Token.OutPrompt.Color:     "bold #bb0000",
+        Token.InPrompt.Number:     "bold #ansiblue", 
+        Token.InPrompt.Color :     "bold #ansiblue", 
+        Token.OutPrompt.Number:    "bold #ansired",
+        Token.OutPrompt.Color:     "bold #ansired",
 
         Whitespace:                "#bbbbbb",
         Comment:                   "italic #408080",

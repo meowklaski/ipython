@@ -186,7 +186,6 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
         """
         if sys.version_info < (3,):
             S = io.BytesIO()
-            #import pdb; pdb.set_trace()
             utype = ttype.encode()
             ustr = string_.encode('utf-8')
             self.format([(utype, ustr)], S)
