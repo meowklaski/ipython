@@ -65,7 +65,7 @@ import pygments.styles
 
 from collections import defaultdict
 
-from IPython.utils.styles import LightBGStyle, NoColorStyle, LinuxStyle
+from IPython.utils.styles import LightBGStyle, NoColorStyle, LinuxStyle, ansify
 from traitlets.config import Configurable
 from traitlets import Unicode, Bool
 
@@ -114,7 +114,6 @@ class debugWrappAccessor(dict):
         return ('<'+key+'>', '</'+key+'>')
 
 import random
-from IPython.utils.lightbg import ansify
 
 class wrappAccessor(dict):
     """
