@@ -124,8 +124,9 @@ class wrappAccessor(dict):
     prompts.
     """
 
-    def __init__(self, *args, ansify=False, **kwargs):
-        self.ansify = ansify
+    def __init__(self, *args, **kwargs):
+
+        self.ansify = kwargs.pop('ansify', None)
         super(wrappAccessor, self).__init__(*args, **kwargs)
     
     def __getitem__(self, key):
