@@ -182,7 +182,11 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
     def __init__(self, *args, **kwargs):
         Colorable.__init__(self, *args, **kwargs)
 
-        kwargs['style'] = normalize_style(kwargs.get('style', self.default_style))
+        style = kwargs['style']
+        if style:
+            kwargs['style'] = normalize_style(style)
+        else:
+            kwargs['style'] = normalize_style(self.default_style)
         
         Terminal256Formatter.__init__(self, *args, **kwargs)
 
