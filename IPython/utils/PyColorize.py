@@ -83,12 +83,9 @@ class Colorable(Configurable):
 # to uppercase one. 
 style_map = {
     'linux': LinuxStyle,
-    'Linux': LinuxStyle,
     'lightbg': LightBGStyle, 
-    'LightBG': LightBGStyle, 
     'nocolor': NoColorStyle,
-    'NoColors': NoColorStyle,
-    'NoColor': NoColorStyle,
+    'nocolors': NoColorStyle,
     }
 
 ## map to old-style Prompt token name to new ones. 
@@ -167,7 +164,10 @@ class wrappAccessor(dict):
             raise ValueError('Unknown Key Type')
                  
 def normalize_style(style):
-    return style_map.get(style, style)
+    if type(style) == type(''):
+        return style_map.get(style.lower(), style)
+    else:
+        return style
 
 class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
     """Pygments Terminal formater special-cased for IPython
@@ -182,26 +182,19 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
     def __init__(self, *args, **kwargs):
         Colorable.__init__(self, *args, **kwargs)
 
-        if kwargs.get('style'):
-            kwargs['style'] = normalize_style(kwargs['style'])
-        else:
-            kwargs['style']= normalize_style(self.default_style)
+        kwargs['style'] = normalize_style(kwargs.get('style', self.default_style))
         
         Terminal256Formatter.__init__(self, *args, **kwargs)
+
+        ansify = getattr(kwargs['style'], 'use_ansi', False)
 
         # patch for subclass to go through accessors.
         if self.debug:
             self.style_string = debugWrappAccessor(self.style_string)
-        wa = wrappAccessor(self.style_string)
-        if getattr(kwargs['style'], 'use_ansi', None):
-            sa = True
         else :
-            sa = False
+            self.style_string = wrappAccessor(self.style_string, ansify=ansify)
 
-        self.style_string = wrappAccessor(self.style_string, ansify=sa)
 
-    
-        
     def single_fmt(self, string_, ttype):
         """
         Format string with the style of ttype token.
@@ -213,22 +206,15 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
             self.format([(utype, ustr)], S)
         else :
             S = io.StringIO()
-            self.format([(ttype,string_)], S)
+            self.format([(ttype, string_)], S)
         S.seek(0)
         return S.read()
 
 
 #############################################################################
-### Python Source Parser (does Hilighting)
+### Python Source Parser (does Highlighting)
 #############################################################################
 
-_KEYWORD = token.NT_OFFSET + 1
-_TEXT    = token.NT_OFFSET + 2
-
-#****************************************************************************
-# Builtin color schemes
-
-# Build table of color schemes (needed by the parser)
 
 class Parser(Colorable):
     """ Format colored Python source.
@@ -240,7 +226,7 @@ class Parser(Colorable):
         if new != old:
             self._form = IPythonTerm256Formatter(style=new, parent=self)
             return new
-        
+
 
     def __init__(self, color_table=None, out=sys.stdout, parent=None, style=None):
         """ Create a parser with a specified color table and output channel.
@@ -251,11 +237,10 @@ class Parser(Colorable):
         """
         super(Parser, self).__init__(parent=parent)
         self.out = out
+
+        self.style= style if style else self.default_style
+
         self._lex = PythonLexer()
-        if style: 
-            self.style=style
-        else:
-            self.style = self.default_style
         self._form = IPythonTerm256Formatter(style=self.style, parent=self)
         
     def _pylight(self, code):
@@ -290,20 +275,13 @@ class Parser(Colorable):
         elif out is not None:
             self.out = out
 
-        # Fast return of the unmodified input for NoColor scheme
-        # if scheme == 'NoColor':
-        #     error = False
-        #     self.out.write(raw)
-        #     if string_output:
-        #         return raw, error
-        #     else:
-        #         return None, error
-
         # Remove trailing whitespace and normalize tabs
         self.raw = raw.expandtabs().rstrip()
 
         # parse the source and write it
         error = False
+
+        highlighted = ''
         try:
             highlighted = self._pylight(self.raw)
         # TODO: figure out what kind of exception it can throw 
