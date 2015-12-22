@@ -298,7 +298,7 @@ class Parser(Colorable):
 
     def fmt(self, *tokens):
         """
-        Format a stream of (TokenType, Token) to an ANSO string and return it.
+        Format a stream of (TokenType, Token) to an ANSI string and return it.
 
         Convenience method.
         """
