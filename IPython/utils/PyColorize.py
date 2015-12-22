@@ -114,6 +114,16 @@ class debugWrappAccessor(dict):
         return ('<'+key+'>', '</'+key+'>')
 
 import random
+from IPython.utils.lightbg import ansify as af
+
+def ansify(fun):
+
+    def _wrap(*args, **kwargs):
+        ret = fun(*args, **kwargs)
+        #print('got:', ret)
+        return (af(ret[0]), ret[1])
+
+    return _wrap
 
 class wrappAccessor(dict):
     """
@@ -121,7 +131,8 @@ class wrappAccessor(dict):
     to correctly calculate the length of formatted strings when redrawing the
     prompts.
     """
-
+    
+    @ansify
     def __getitem__(self, key):
         import IPython.utils.py3compat as c
         try:
@@ -189,7 +200,6 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
             utype = ttype.encode()
             ustr = string_.encode('utf-8')
             self.format([(utype, ustr)], S)
-
         else :
             S = io.StringIO()
             self.format([(ttype,string_)], S)
