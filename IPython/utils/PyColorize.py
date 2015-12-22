@@ -65,8 +65,7 @@ import pygments.styles
 
 from collections import defaultdict
 
-from IPython.utils.linux import LinuxStyle
-from IPython.utils.lightbg import LightBGStyle, NoColorStyle
+from IPython.utils.styles import LightBGStyle, NoColorStyle, LinuxStyle
 from traitlets.config import Configurable
 from traitlets import Unicode, Bool
 

@@ -59,7 +59,6 @@ name_to_num, num_to_ansicode = _gen_name_to_num(_num_to_hex)
 
 # name_to_hex will be useful later too.
 name_to_hex = {}
-num_to_ansi_code = {}
 for name,num in name_to_num.items():
     name_to_hex[name] = _num_to_hex[num]
 
@@ -84,7 +83,6 @@ def ansify(seq):
         else:
             return seq
     except:
-        import pdb; pdb.set_trace()
         return seq
 
 
@@ -102,7 +100,7 @@ class LightBGStyle(Style):
 
     use_ansi=True
 
-    styles = defaultdict(lambda:'italic #FF0000',{
+    styles = {
         Token.InPrompt.Number:     ansi('blue'), 
         Token.InPrompt.Color :     ansi('blue'), 
         Token.OutPrompt.Number:    ansi('red'),
@@ -113,4 +111,21 @@ class LightBGStyle(Style):
         String:                    ansi('blue'),
         Number:                    ansi('cyan'),
         Error:                     ansi("red")
-    })
+    }
+
+class LinuxStyle(Style):
+
+    use_ansi=True
+    
+    styles = {
+        Token.InPrompt.Number:     ansi('brightgreen'), 
+        Token.InPrompt.Color :     ansi('green'), 
+        Token.OutPrompt.Number:    ansi('brightred'),
+        Token.OutPrompt.Color:     ansi('red'),
+        Comment:                   ansi('brightred'),
+        Keyword:                   ansi('brightgreen'),
+        Operator:                  ansi('yellow'),
+        String:                    ansi('brightblue'),
+        Number:                    ansi('brightcyan'),
+        Error:                     ansi("red")
+    }
