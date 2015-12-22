@@ -367,7 +367,6 @@ class Inspector(PyColorize.Colorable):
                 "argument is now ignore and will be removed in future versions", 
                 DeprecationWarning)
 
-
         self.parser = PyColorize.Parser(out='str', parent=self, style=scheme)
         self.format = self.parser.format
         self.str_detail_level = str_detail_level

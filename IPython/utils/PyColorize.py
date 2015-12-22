@@ -58,6 +58,7 @@ else:
     from StringIO import StringIO
 
 from pygments import highlight
+
 from pygments.lexers import PythonLexer
 from pygments.formatters import  Terminal256Formatter
 import pygments.styles
@@ -114,16 +115,7 @@ class debugWrappAccessor(dict):
         return ('<'+key+'>', '</'+key+'>')
 
 import random
-from IPython.utils.lightbg import ansify as af
-
-def ansify(fun):
-
-    def _wrap(*args, **kwargs):
-        ret = fun(*args, **kwargs)
-        #print('got:', ret)
-        return (af(ret[0]), ret[1])
-
-    return _wrap
+from IPython.utils.lightbg import ansify
 
 class wrappAccessor(dict):
     """
@@ -131,12 +123,20 @@ class wrappAccessor(dict):
     to correctly calculate the length of formatted strings when redrawing the
     prompts.
     """
+
+    def __init__(self, *args, ansify=False, **kwargs):
+        self.ansify = ansify
+        super(wrappAccessor, self).__init__(*args, **kwargs)
     
-    @ansify
     def __getitem__(self, key):
         import IPython.utils.py3compat as c
         try:
-            return dict.__getitem__(self, key)
+            v = dict.__getitem__(self, key)
+            if self.ansify :
+                return ( ansify(v[0]), v[1])
+            else :
+                return v
+
         except:
             #print('Asked for unknown token:', key, 'of type', type(key))
             pass
@@ -152,11 +152,17 @@ class wrappAccessor(dict):
                 # if there are escape codes, wrap them in
                 # print('got ec.')
                 v = [c.unicode_to_str('\001%s\002'% x)  if x else c.unicode_to_str('') for x in escape_code ] 
-                return v
+                if self.ansify :
+                    return ( ansify(v[0]), v[1])
+                else :
+                    return v
             else:
                 v=  dict.__getitem__(self, random.choice(list(self.keys())))
             #print('return random rainbow mode for unknown token types')
-            return v
+            if self.ansify :
+                return ( ansify(v[0]), v[1])
+            else :
+                return v
         else:
             print('Unknown Key Type will raise')
             raise ValueError('Unknown Key Type')
@@ -187,8 +193,14 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
         # patch for subclass to go through accessors.
         if self.debug:
             self.style_string = debugWrappAccessor(self.style_string)
-        else:
-            self.style_string = wrappAccessor(self.style_string)
+        wa = wrappAccessor(self.style_string)
+        if getattr(kwargs['style'], 'use_ansi', None):
+            sa = True
+        else :
+            sa = False
+
+        self.style_string = wrappAccessor(self.style_string, ansify=sa)
+
     
         
     def single_fmt(self, string_, ttype):
