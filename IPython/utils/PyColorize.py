@@ -1,38 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Class and program to colorize python source code for ANSI terminals.
+Class and utilities to colorize python source code for ANSI terminals.
 
-Based on an HTML code highlighter by Jurgen Hermann found at:
-http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52298
-
-Modifications by Fernando Perez (fperez@colorado.edu).
-
-Information on the original HTML highlighter follows:
-
-MoinMoin - Python Source Parser
-
-Title: Colorize Python source using the built-in tokenizer
-
-Submitter: Jurgen Hermann
-Last Updated:2001/04/06
-
-Version no:1.2
-
-Description:
-
-This code is part of MoinMoin (http://moin.sourceforge.net/) and converts
-Python source code to HTML markup, rendering comments, keywords,
-operators, numeric and string literals in different colors.
-
-It shows how to use the built-in keyword, token and tokenize modules to
-scan Python source code and re-emit it with no changes to its original
-formatting (which is the hard part).
 """
 from __future__ import print_function
 from __future__ import absolute_import
 from __future__ import unicode_literals
-
-__all__ = ['Parser']
 
 _scheme_default = 'Linux'
 
@@ -40,7 +13,7 @@ _scheme_default = 'Linux'
 # Imports
 import io
 import sys
-import token
+import random
 import tokenize
 
 try:
@@ -70,6 +43,7 @@ from traitlets.config import Configurable
 from traitlets import Unicode, Bool
 
 
+# TODO: dynamically check that, and make extension easier. 
 available_themes = lambda : [s for s in pygments.styles.get_all_styles()]+['NoColor','LightBG','Linux']
 
 class Colorable(Configurable):
@@ -89,7 +63,7 @@ style_map = {
     }
 
 ## map to old-style Prompt token name to new ones. 
-tmap = {
+_prompt_token_map = {
     'in_number': 'Token.InPrompt.Color',
     'in_prompt': 'Token.InPrompt.Number',
     'out_number': 'Token.OutPrompt.Color',
@@ -98,7 +72,7 @@ tmap = {
 
 ## map to default Token name, if the definition for above token do not exist
 # (eg, all the non-ipython styles in pygments) 
-fallbackp = defaultdict(lambda:'Token.Literal.String',{
+_prompt_fallback_map = defaultdict(lambda:'Token.Literal.String',{
     'in_number': 'Token.Keyword',
     'in_prompt': 'Token.Keyword',
     'out_number': 'Token.Generic.Output',
@@ -110,7 +84,6 @@ class debugWrappAccessor(dict):
     def __getitem__(self, key):
         return ('<'+key+'>', '</'+key+'>')
 
-import random
 
 class wrappAccessor(dict):
     """
@@ -137,7 +110,7 @@ class wrappAccessor(dict):
             #print('Asked for unknown token:', key, 'of type', type(key))
             pass
         if isinstance(key, str):
-            for k in (key, tmap.get(key), fallbackp.get(key)):
+            for k in (key, _prompt_token_map.get(key), _prompt_fallback_map.get(key)):
                 try:
                     escape_code = dict.__getitem__(self, k)
                 except KeyError:
@@ -205,20 +178,16 @@ class IPythonTerm256Formatter(Colorable, Terminal256Formatter ):
         """
         if sys.version_info < (3,):
             S = io.BytesIO()
-            utype = ttype.encode()
-            ustr = string_.encode('utf-8')
-            self.format([(utype, ustr)], S)
+            self.format([(ttype.encode(), string_.encode('utf-8'))], S)
         else :
             S = io.StringIO()
             self.format([(ttype, string_)], S)
         S.seek(0)
         return S.read()
 
-
 #############################################################################
 ### Python Source Parser (does Highlighting)
 #############################################################################
-
 
 class Parser(Colorable):
     """ Format colored Python source.
