@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from pygments.style import Style
-from pygments.token import Keyword, Name, Comment, String, Error, \
-     Number, Operator, Generic, Whitespace, Token
+from pygments.token import Keyword, Comment, String, Error, \
+     Number, Operator, Token
 
 import re
 from collections import defaultdict
@@ -100,9 +100,6 @@ class LightBGStyle(Style):
     The default style (inspired by Emacs 22).
     """
 
-    background_color = "#f8f8f8"
-    default_style = ""
-
     use_ansi=True
 
     styles = defaultdict(lambda:'italic #FF0000',{
@@ -110,51 +107,10 @@ class LightBGStyle(Style):
         Token.InPrompt.Color :     ansi('blue'), 
         Token.OutPrompt.Number:    ansi('red'),
         Token.OutPrompt.Color:     ansi('red'),
-#
-#        Whitespace:                "#bbbbbb",
         Comment:                   ansi('red'),
-#        Comment.Preproc:           "noitalic #BC7A00",
-#
         Keyword:                   ansi('green'),
-#        Keyword.Pseudo:            "nobold",
-#        Keyword.Type:              "nobold #B00040",
-#
         Operator:                  ansi('blue'),
-#        Operator.Word:             "bold #AA22FF",
-#
-#        Name.Builtin:              "#008000",
-#        Name.Function:             "#0000FF",
-#        Name.Class:                "bold #0000FF",
-#        Name.Namespace:            "bold #0000FF",
-#        Name.Exception:            "bold #D2413A",
-#        Name.Variable:             "#19177C",
-#        Name.Constant:             "#880000",
-#        Name.Label:                "#A0A000",
-#        Name.Entity:               "bold #999999",
-#        Name.Attribute:            "#7D9029",
-#        Name.Tag:                  "bold #008000",
-#        Name.Decorator:            "#AA22FF",
-#
         String:                    ansi('blue'),
-#        String.Doc:                "italic",
-#        String.Interpol:           "bold #BB6688",
-#        String.Escape:             "bold #BB6622",
-#        String.Regex:              "#BB6688",
-#        #String.Symbol:             "#B8860B",
-#        String.Symbol:             "#19177C",
-#        String.Other:              "#008000",
-       Number:                    ansi('cyan'),
-#
-#        Generic.Heading:           "bold #000080",
-#        Generic.Subheading:        "bold #800080",
-#        Generic.Deleted:           "#A00000",
-#        Generic.Inserted:          "#00A000",
-#        Generic.Error:             "#FF0000",
-#        Generic.Emph:              "italic",
-#        Generic.Strong:            "bold",
-#        Generic.Prompt:            "bold #000080",
-#        Generic.Output:            "#888",
-#        Generic.Traceback:         "#04D",
-#
+        Number:                    ansi('cyan'),
         Error:                     ansi("red")
     })
