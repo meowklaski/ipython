@@ -33,7 +33,7 @@ from pygments.token import Token
 
 from .pt_inputhooks import get_inputhook_func
 from .interactiveshell import get_default_editor, TerminalMagics
-from .prompts import Prompts
+from .prompts import Prompts, RichPromptDisplayHook
 
 
 class IPythonPTCompleter(Completer):
@@ -136,17 +136,16 @@ class TerminalInteractiveShell(InteractiveShell):
 
     editor = Unicode(get_default_editor(),
         help="Set the editor used by IPython (default to $EDITOR/vi/notepad)."
-<<<<<<< f2b4534e7ad66d4f66fecaee126da9237ca36562
     ).tag(config=True)
-=======
-    )
 
     prompts = Instance(Prompts)
 
     def _prompts_default(self):
         return Prompts(self)
->>>>>>> New prompts class for terminal interface
-    
+
+    def _displayhook_class_default(self):
+        return RichPromptDisplayHook
+
     term_title = Bool(True,
         help="Automatically set the terminal title"
     ).tag(config=True)
@@ -267,6 +266,8 @@ class TerminalInteractiveShell(InteractiveShell):
         style_overrides = {
             Token.Prompt: '#009900',
             Token.PromptNum: '#00ff00 bold',
+            Token.OutPrompt: '#990000',
+            Token.OutPromptNum: '#ff0000 bold',
         }
         if name == 'default':
             style_cls = get_style_by_name('default')
