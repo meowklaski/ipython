@@ -13,7 +13,7 @@ from IPython.core.interactiveshell import InteractiveShell
 from IPython.utils.py3compat import PY3, cast_unicode_py2, input
 from IPython.utils.terminal import toggle_set_term_title, set_term_title
 from IPython.utils.process import abbrev_cwd
-from traitlets import Bool, Unicode, Dict, Integer, observe
+from traitlets import Bool, Unicode, Dict, Integer, observe, Instance
 
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.enums import DEFAULT_BUFFER, SEARCH_BUFFER, EditingMode
@@ -33,6 +33,7 @@ from pygments.token import Token
 
 from .pt_inputhooks import get_inputhook_func
 from .interactiveshell import get_default_editor, TerminalMagics
+from .prompts import Prompts
 
 
 class IPythonPTCompleter(Completer):
@@ -135,7 +136,16 @@ class TerminalInteractiveShell(InteractiveShell):
 
     editor = Unicode(get_default_editor(),
         help="Set the editor used by IPython (default to $EDITOR/vi/notepad)."
+<<<<<<< f2b4534e7ad66d4f66fecaee126da9237ca36562
     ).tag(config=True)
+=======
+    )
+
+    prompts = Instance(Prompts)
+
+    def _prompts_default(self):
+        return Prompts(self)
+>>>>>>> New prompts class for terminal interface
     
     term_title = Bool(True,
         help="Automatically set the terminal title"
@@ -154,18 +164,6 @@ class TerminalInteractiveShell(InteractiveShell):
             set_term_title('IPython: ' + abbrev_cwd())
         else:
             toggle_set_term_title(False)
-
-    def get_prompt_tokens(self, cli):
-        return [
-            (Token.Prompt, 'In ['),
-            (Token.PromptNum, str(self.execution_count)),
-            (Token.Prompt, ']: '),
-        ]
-
-    def get_continuation_tokens(self, cli, width):
-        return [
-            (Token.Prompt, (' ' * (width - 5)) + '...: '),
-        ]
 
     def init_prompt_toolkit_cli(self):
         if ('IPY_TEST_SIMPLE_PROMPT' in os.environ) or not sys.stdin.isatty():
@@ -296,8 +294,8 @@ class TerminalInteractiveShell(InteractiveShell):
         return {
                 'lexer':IPythonPTLexer(),
                 'reserve_space_for_menu':self.space_for_menu,
-                'get_prompt_tokens':self.get_prompt_tokens,
-                'get_continuation_tokens':self.get_continuation_tokens,
+                'get_prompt_tokens':self.prompts.in_prompt_tokens,
+                'get_continuation_tokens':self.prompts.continuation_prompt_tokens,
                 'multiline':True,
                 'display_completions_in_columns': self.display_completions_in_columns,
                 }
@@ -464,6 +462,19 @@ class TerminalInteractiveShell(InteractiveShell):
     # Run !system commands directly, not through pipes, so terminal programs
     # work correctly.
     system = InteractiveShell.system_raw
+
+    def auto_rewrite_input(self, cmd):
+        """Overridden from the parent class to use fancy rewriting prompt"""
+        if not self.show_rewritten_input:
+            return
+
+        tokens = self.prompts.rewrite_prompt_tokens()
+        if self.pt_cli:
+            self.pt_cli.print_tokens(tokens)
+            print(cmd)
+        else:
+            prompt = ''.join(s for t, s in tokens)
+            print(prompt, cmd, sep='')
 
 
 if __name__ == '__main__':
