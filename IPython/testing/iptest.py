@@ -45,6 +45,7 @@ pjoin = path.join
 
 # Enable printing all warnings raise by IPython's modules
 warnings.filterwarnings('default', message='.*', category=Warning, module='IPy.*')
+warnings.filterwarnings('error', message='.*', category=ResourceWarning, module='IPy.*')
 
 if version_info < (6,):
     # nose.tools renames all things from `camelCase` to `snake_case` which raise an
