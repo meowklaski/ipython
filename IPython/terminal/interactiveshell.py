@@ -56,8 +56,15 @@ def get_default_editor():
 
 if sys.stdin and sys.stdout and sys.stderr:
     _is_tty = (sys.stdin.isatty()) and (sys.stdout.isatty()) and  (sys.stderr.isatty())
+    print('sys.stdin/out/err exists')
+    print('sys.stdin is a tty:', sys.stdin.isatty())
+    print('sys.stdout is a tty:', sys.stdout.isatty())
+    print('sys.stderr is a tty:', sys.stderr.isatty())
+    if _is_tty:
+        raise ValueError('not possible')
 else:
     _is_tty = False
+
 
 
 _use_simple_prompt = ('IPY_TEST_SIMPLE_PROMPT' in os.environ) or (not _is_tty)
