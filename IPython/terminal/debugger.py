@@ -8,6 +8,8 @@ from prompt_toolkit.shortcuts import create_prompt_application
 from prompt_toolkit.interface import CommandLineInterface
 from prompt_toolkit.enums import EditingMode
 
+import sys
+
 class TerminalPdb(Pdb):
     def __init__(self, *args, **kwargs):
         Pdb.__init__(self, *args, **kwargs)
@@ -71,3 +73,6 @@ class TerminalPdb(Pdb):
             self.postloop()
         except Exception:
             raise
+
+def set_trace():
+    Pdb().set_trace(sys._getframe().f_back)
