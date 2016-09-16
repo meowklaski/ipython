@@ -71,41 +71,41 @@ from IPython.testing import tools as tt
 #         src2 = fh2.read()
 #     nt.assert_equal(src2, src)
 
-class TestAssertPrints(unittest.TestCase):
-    def test_passing(self):
-        with tt.AssertPrints("abc"):
-            print("abcd")
-            print("def")
-            print(b"ghi")
-    
-    def test_failing(self):
-        def func():
-            with tt.AssertPrints("abc"):
-                print("acd")
-                print("def")
-                print(b"ghi")
-        
-        self.assertRaises(AssertionError, func)
+# class TestAssertPrints(unittest.TestCase):
+#     def test_passing(self):
+#         with tt.AssertPrints("abc"):
+#             print("abcd")
+#             print("def")
+#             print(b"ghi")
+#     
+#     def test_failing(self):
+#         def func():
+#             with tt.AssertPrints("abc"):
+#                 print("acd")
+#                 print("def")
+#                 print(b"ghi")
+#         
+#         self.assertRaises(AssertionError, func)
 
 
 class Test_ipexec_validate(unittest.TestCase, tt.TempFileMixin):
-    def test_main_path(self):
-        """Test with only stdout results.
-        """
-        self.mktmp("print('A')\n"
-                   "print('B')\n"
-                   )
-        out = "A\nB"
-        tt.ipexec_validate(self.fname, out)
+    #def test_main_path(self):
+    #    """Test with only stdout results.
+    #    """
+    #    self.mktmp("print('A')\n"
+    #               "print('B')\n"
+    #               )
+    #    out = "A\nB"
+    #    tt.ipexec_validate(self.fname, out)
 
-    def test_main_path2(self):
-        """Test with only stdout results, expecting windows line endings.
-        """
-        self.mktmp("print('A')\n"
-                   "print('B')\n"
-                   )
-        out = "A\r\nB"
-        tt.ipexec_validate(self.fname, out)
+    #def test_main_path2(self):
+    #    """Test with only stdout results, expecting windows line endings.
+    #    """
+    #    self.mktmp("print('A')\n"
+    #               "print('B')\n"
+    #               )
+    #    out = "A\r\nB"
+    #    tt.ipexec_validate(self.fname, out)
 
     def test_exception_path(self):
         """Test exception path in exception_validate.
