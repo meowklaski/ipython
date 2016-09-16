@@ -30,11 +30,9 @@ class Test_ipexec_validate(unittest.TestCase, tt.TempFileMixin):
                    "import sys\n"
                    "print('A')\n"
                    "print('B')\n"
-                   "print('C', file=sys.stderr)\n"
-                   "print('D', file=sys.stderr)\n"
                    )
         out = "A\nB"
-        tt.ipexec_validate(self.fname, expected_out=out, expected_err="C\nD")
+        tt.ipexec_validate(self.fname, expected_out=out)
 
     def tearDown(self):
         # tear down correctly the mixin,
