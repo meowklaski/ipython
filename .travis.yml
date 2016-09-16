@@ -10,6 +10,7 @@ install:
 script:
     - export PYTHONWARNINGS='ignore'; python -m IPython --quick --colors=NoColor --no-term-title --no-banner --autocall=0 foo.py
     - export PYTHONWARNINGS='ignore'; python foo.py
+    - export PYTHONWARNINGS='ignore'; python -c 'print(1)'
     - cd ~ && iptest && cd -
 after_success:
     - cp /tmp/ipy_coverage.xml ./
