@@ -213,12 +213,13 @@ def ipexec(fname, options=None, commands=()):
     env = os.environ.copy()
     # FIXME: ignore all warnings in ipexec while we have shims
     # should we keep suppressing warnings here, even after removing shims?
-    env['PYTHONWARNINGS'] = 'ignore'
+    # env['PYTHONWARNINGS'] = 'ignore'
     # env.pop('PYTHONWARNINGS', None)  # Avoid extraneous warnings appearing on stderr
     for k, v in env.items():
         # Debug a bizarre failure we've seen on Windows:
         # TypeError: environment can only contain strings
-        print(k, v)
+        # print(k, v)
+        pass
     p = Popen(full_cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env=env)
     imp = py3compat.str_to_bytes('\n'.join(commands))
     print(imp, full_cmd)
