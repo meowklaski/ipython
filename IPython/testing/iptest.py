@@ -154,7 +154,6 @@ test_sections = {n:TestSection(n, ['IPython.%s' % n]) for n in test_group_names}
 # ---------------------------
 
 # core:
-sec = test_sections['core']
 if not have['sqlite3']:
     sec.exclude('tests.test_history')
     sec.exclude('history')
