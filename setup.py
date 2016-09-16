@@ -191,12 +191,7 @@ extras_require = dict(
     parallel = ['ipyparallel'],
     qtconsole = ['qtconsole'],
     doc = ['Sphinx>=1.3'],
-    test = ['nose>=0.10.1', 'requests', 'testpath', 'pygments', 'nbformat'],
-    terminal = [],
-    kernel = ['ipykernel'],
-    nbformat = ['nbformat'],
-    notebook = ['notebook', 'ipywidgets'],
-    nbconvert = ['nbconvert'],
+    test = ['nose>=0.10.1', 'requests', 'testpath'],
 )
 
 install_requires = [
