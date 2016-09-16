@@ -214,7 +214,7 @@ def ipexec(fname, options=None, commands=()):
     # FIXME: ignore all warnings in ipexec while we have shims
     # should we keep suppressing warnings here, even after removing shims?
     env['PYTHONWARNINGS'] = 'ignore'
-    # env.pop('PYTHONWARNINGS', None)  # Avoid extraneous warnings appearing on stderr
+    env.pop('PYTHONWARNINGS', None)  # Avoid extraneous warnings appearing on stderr
     for k, v in env.items():
         # Debug a bizarre failure we've seen on Windows:
         # TypeError: environment can only contain strings
@@ -226,8 +226,8 @@ def ipexec(fname, options=None, commands=()):
     out, err = py3compat.bytes_to_str(out), py3compat.bytes_to_str(err)
     # `import readline` causes 'ESC[?1034h' to be output sometimes,
     # so strip that out before doing comparisons
-    if out:
-        out = re.sub(r'\x1b\[[^h]+h', '', out)
+    #if out:
+    #    out = re.sub(r'\x1b\[[^h]+h', '', out)
     return out, err
 
 
@@ -261,8 +261,6 @@ def ipexec_validate(fname, expected_out, expected_err='',
     import nose.tools as nt
 
     out, err = ipexec(fname, options, commands)
-    #print 'OUT', out  # dbg
-    #print 'ERR', err  # dbg
     # If there are any errors, we must check those befor stdout, as they may be
     # more informative than simply having an empty stdout.
     if err:
