@@ -122,8 +122,8 @@ have = {'matplotlib': test_for('matplotlib'),
 # Test suite definitions
 #-----------------------------------------------------------------------------
 
-test_group_names = ['core',
-                    'extensions', 'lib', 'terminal', 'testing', 'utils',
+test_group_names = [
+                     'testing'
                    ]
 
 class TestSection(object):
@@ -196,9 +196,6 @@ sec.exclude('rmagic')
 # autoreload does some strange stuff, so move it to its own test section
 sec.exclude('autoreload')
 sec.exclude('tests.test_autoreload')
-test_sections['autoreload'] = TestSection('autoreload',
-        ['IPython.extensions.autoreload', 'IPython.extensions.tests.test_autoreload'])
-test_group_names.append('autoreload')
 
 
 #-----------------------------------------------------------------------------
