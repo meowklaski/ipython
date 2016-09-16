@@ -8,7 +8,7 @@ install:
     - pip install -f travis-wheels/wheelhouse -e file://$PWD#egg=ipython[test]
     - pip install codecov
 script:
-    - PYTHONWARNINGS='ignore'; python -m IPython --quick --colors=NoColor --no-term-title --no-banner --autocall=0 foo.py
+    - export PYTHONWARNINGS='ignore'; python -m IPython --quick --colors=NoColor --no-term-title --no-banner --autocall=0 foo.py
     - cd /tmp && iptest --coverage xml && cd -
 after_success:
     - cp /tmp/ipy_coverage.xml ./
