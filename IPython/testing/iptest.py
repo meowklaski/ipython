@@ -153,14 +153,6 @@ test_sections = {n:TestSection(n, ['IPython.%s' % n]) for n in test_group_names}
 # Exclusions and dependencies
 # ---------------------------
 
-# core:
-if not have['sqlite3']:
-    sec.exclude('tests.test_history')
-    sec.exclude('history')
-if not have['matplotlib']:
-    sec.exclude('pylabtools'),
-    sec.exclude('tests.test_pylabtools')
-
 # lib:
 sec = test_sections['lib']
 sec.exclude('kernel')
