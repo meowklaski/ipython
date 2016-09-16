@@ -218,10 +218,11 @@ def ipexec(fname, options=None, commands=()):
     for k, v in env.items():
         # Debug a bizarre failure we've seen on Windows:
         # TypeError: environment can only contain strings
-        if not isinstance(v, str):
-            print(k, v)
+        print(k, v)
     p = Popen(full_cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env=env)
-    out, err = p.communicate(input=py3compat.str_to_bytes('\n'.join(commands)) or None)
+    imp = py3compat.str_to_bytes('\n'.join(commands))
+    print(imp)
+    out, err = p.communicate(input=imp or None)
     out, err = py3compat.bytes_to_str(out), py3compat.bytes_to_str(err)
     # `import readline` causes 'ESC[?1034h' to be output sometimes,
     # so strip that out before doing comparisons
