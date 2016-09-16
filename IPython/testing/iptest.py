@@ -154,20 +154,13 @@ test_sections = {n:TestSection(n, ['IPython.%s' % n]) for n in test_group_names}
 # ---------------------------
 
 # lib:
-sec = test_sections['lib']
-sec.exclude('kernel')
-if not have['pygments']:
-    sec.exclude('tests.test_lexers')
 # We do this unconditionally, so that the test suite doesn't import
 # gtk, changing the default encoding and masking some unicode bugs.
-sec.exclude('inputhookgtk')
 # We also do this unconditionally, because wx can interfere with Unix signals.
 # There are currently no tests for it anyway.
-sec.exclude('inputhookwx')
 # Testing inputhook will need a lot of thought, to figure out
 # how to have tests that don't lock up with the gui event
 # loops in the picture
-sec.exclude('inputhook')
 
 # testing:
 sec = test_sections['testing']
@@ -178,15 +171,7 @@ if sys.platform == 'win32':
     sec.exclude('plugin.dtexample')
 
 # don't run jupyter_console tests found via shim
-test_sections['terminal'].exclude('console')
-
-# extensions:
-sec = test_sections['extensions']
-# This is deprecated in favour of rpy2
-sec.exclude('rmagic')
-# autoreload does some strange stuff, so move it to its own test section
-sec.exclude('autoreload')
-sec.exclude('tests.test_autoreload')
+# extension:
 
 
 #-----------------------------------------------------------------------------
