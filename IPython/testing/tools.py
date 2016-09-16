@@ -220,7 +220,7 @@ def ipexec(fname, options=None, commands=()):
         # TypeError: environment can only contain strings
         # print(k, v)
         pass
-    p = Popen(full_cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env=env)
+    p = Popen(full_cmd, stdout=PIPE, stderr=PIPE, stdin=PIPE, env={'PYTHONWARNINGS':'ignore'})
     imp = py3compat.str_to_bytes('\n'.join(commands))
     print(imp, full_cmd)
     out, err = p.communicate(input=imp or None)
