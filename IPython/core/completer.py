@@ -39,6 +39,15 @@ from IPython.utils.process import arg_split
 from IPython.utils.py3compat import cast_unicode_py2
 from traitlets import Bool, Enum, observe
 
+try:
+    import jedi
+    import jedi.api.helpers
+    JEDI_INSTALLED = True
+except ImportError:
+    JEDI_INSTALLED = False
+#-----------------------------------------------------------------------------
+# Globals
+#-----------------------------------------------------------------------------
 
 # Public API
 __all__ = ['Completer','IPCompleter']
@@ -229,6 +238,18 @@ class CompletionSplitter(object):
         l = line if cursor_pos is None else line[:cursor_pos]
         return self._delim_re.split(l)[-1]
 
+class ProvisionalCompleterWarning(FutureWarning):pass
+# warnings.filterwarnings('error', category=ProvisionalCompleterWarning)
+
+
+from contextlib import contextmanager
+
+@contextmanager
+def provisionalcompleter(action='ignore'):
+    with warnings.catch_warnings():
+        warnings.filterwarnings(action, category=ProvisionalCompleterWarning)
+        yield
+
 
 class Completer(Configurable):
 
@@ -240,6 +261,11 @@ class Completer(Configurable):
         but can be unsafe because the code is actually evaluated on TAB.
         """
     ).tag(config=True)
+
+    use_jedi = Bool(default_value=JEDI_INSTALLED, config=True,
+                                help="""Experimental: Use Jedi to generate autocompletions. "
+            "Default to True if jedi is installed
+        """)
     
 
     def __init__(self, namespace=None, global_namespace=None, **kwargs):
@@ -726,6 +752,70 @@ class IPCompleter(Completer):
             comp += [ pre+m for m in line_magics if m.startswith(bare_text)]
         return [cast_unicode_py2(c) for c in comp]
 
+        """
+
+        """
+
+    def _jedi_matches(self, text, line_buffer, cursor_position):
+        if line_buffer.startswith('aimport ') or line_buffer.startswith('%aimport '):
+            return ()
+        namespaces = []
+        if self.namespace is None:
+            import __main__
+            namespaces.append(__main__.__dict__)
+        else:
+            namespaces.append(self.namespace)
+        if self.global_namespace is not None:
+            namespaces.append(self.global_namespace)
+
+        # cursor_pos is an it, jedi wants line and column
+
+        interpreter = jedi.Interpreter(
+            line_buffer, namespaces, column=cursor_position)
+        return interpreter.completions()
+
+    def _python_jedi_matches(self, text, line_buffer, cursor_pos, completions):
+        """Match attributes or global Python names using Jedi."""
+
+        path = jedi.parser.user_context.UserContext(line_buffer,
+                                                    (1, len(line_buffer))).get_path_until_cursor()
+        path, dot, like = jedi.api.helpers.completion_parts(path)
+
+
+        if text.startswith('.'):
+            # text will be `.` on completions like `a[0].<tab>`
+            before = dot
+        else:
+            before = line_buffer[:len(line_buffer) - len(like)]
+
+
+        def trim_start(completion):
+            """completions need to start with `text`, trim the beginning until it does"""
+            ltext = text.lower()
+            lcomp  = completion.lower()
+            if ltext in lcomp and not (lcomp.startswith(ltext)):
+                start_index = lcomp.index(ltext)
+                if cursor_pos:
+                    if start_index >= cursor_pos:
+                        start_index = min(start_index, cursor_pos)
+                return completion[start_index:]
+            return completion
+        
+
+        completion_text = [c.name_with_symbols for c in completions]
+
+        if self.omit__names:
+            if self.omit__names == 1:
+                # true if txt is _not_ a __ name, false otherwise:
+                no__name = lambda txt: not txt.startswith('__')
+            else:
+                # true if txt is _not_ a _ name, false otherwise:
+                no__name = lambda txt: not txt.startswith('_')
+            completion_text = filter(no__name, completion_text)
+
+
+        return [trim_start(before + c_text) for c_text in completion_text]
+
 
     def python_matches(self, text):
         """Match attributes or global python names"""
@@ -1117,6 +1207,19 @@ class IPCompleter(Completer):
         matches : list
           A list of completion matches.
         """
+        with provisionalcompleter():
+            return self._complete(line_buffer, cursor_pos, text=text)[:2]
+
+    def _complete(self, line_buffer, cursor_pos, *, text=None):
+        """
+        Like complete but also returns raw jedi completions.
+        """
+
+        warnings.warn("_complete is a provisional API (as of IPython 6.0). " 
+                      "It may change without warnings. "
+                      "Use in corresponding context manager.",
+                      category=ProvisionalCompleterWarning, stacklevel=2)
+
         # if the cursor position isn't given, the only sane assumption we can
         # make is that it's at the end of the line (the common case)
         if cursor_pos is None:
@@ -1150,6 +1253,13 @@ class IPCompleter(Completer):
         # Start with a clean slate of completions
         self.matches[:] = []
         custom_res = self.dispatch_custom_completer(text)
+        # FIXME: we should extend our api to return a dict with completions for
+        # different types of objects.  The rlcomplete() method could then
+        # simply collapse the dict into a list for readline, but we'd have
+        # richer completion semantics in other evironments.
+        completions = None
+        if self.use_jedi:
+            completions = self._jedi_matches(text, line_buffer, cursor_pos)
         if custom_res is not None:
             # did custom completers produce something?
             self.matches = custom_res
@@ -1171,10 +1281,7 @@ class IPCompleter(Completer):
                     self.matches = matcher(text)
                     if self.matches:
                         break
-        # FIXME: we should extend our api to return a dict with completions for
-        # different types of objects.  The rlcomplete() method could then
-        # simply collapse the dict into a list for readline, but we'd have
-        # richer completion semantics in other evironments.
+
         self.matches = sorted(set(self.matches), key=completions_sorting_key)
 
-        return text, self.matches
+        return text, self.matches, completions

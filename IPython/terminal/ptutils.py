@@ -10,12 +10,38 @@ not to be used outside IPython.
 import unicodedata
 from wcwidth import wcwidth
 
-from IPython.core.completer import IPCompleter
+from IPython.core.completer import IPCompleter, provisionalcompleter
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.layout.lexers import Lexer
 from prompt_toolkit.layout.lexers import PygmentsLexer
 
 import pygments.lexers as pygments_lexers
+
+_completion_sentinel = object()
+
+from functools import wraps
+
+def _completion_debugger(function):
+    """
+    Wrapper that will analyse completion sent both before and after the
+    _completion_sentinel and mark those in the second group not in the first.
+    """
+    @wraps(function)
+    def new_get_completions(self, document, complete_event):
+        completions  = list(function(self, document, complete_event))
+        from_jedi = []
+        from_ipython = []
+        push = from_jedi
+        for e in completions:
+            if e is _completion_sentinel:
+                push = from_ipython
+            else:
+                push.append(e)
+        yield from from_jedi
+        if any([(_completion_sentinel is c) for c in completions]):
+            yield Completion('', display='--- jedi/ipython ---')
+        yield from [a for a in from_ipython if a not in from_jedi]
+    return new_get_completions
 
 
 class IPythonPTCompleter(Completer):
@@ -33,6 +59,7 @@ class IPythonPTCompleter(Completer):
         else:
             return self.shell.Completer
 
+    @_completion_debugger
     def get_completions(self, document, complete_event):
         if not document.current_line.strip():
             return
@@ -41,10 +68,28 @@ class IPythonPTCompleter(Completer):
         # is imported). This context manager ensures that doesn't interfere with
         # the prompt.
         with self.shell.pt_cli.patch_stdout_context():
-            used, matches = self.ipy_completer.complete(
+            with provisionalcompleter():
+                used, matches, jedi_matches = self.ipy_completer._complete(
                                 line_buffer=document.current_line,
                                 cursor_pos=document.cursor_position_col
             )
+
+        if jedi_matches:
+            for jm in jedi_matches:
+                delta = len(jm.name) - len(jm.complete)
+                if delta >  document.cursor_position_col:
+                    raise ValueError('OhNoooo this completion went wrong, please report a bug with : \n'
+                            '   delta: %s \n' 
+                            '   cursor_position: %s\n'
+                            '   jedimatch %s \n' % 
+                            (delta,document.cursor_position_col,jedi_matches))
+                yield Completion(jm.name, start_position=-delta, display=jm.name_with_symbols)
+
+            # use for debug purpose to visually show a separation between the jedi
+            # and IPython base completions.
+        if jedi_matches is not None:
+            yield _completion_sentinel
+
         start_pos = -len(used)
         for m in matches:
             if not m:
@@ -73,6 +118,7 @@ class IPythonPTCompleter(Completer):
             # yield Completion(m, start_position=start_pos,
             #                  display_meta=meta_text)
             yield Completion(m, start_position=start_pos)
+
 
 class IPythonPTLexer(Lexer):
     """
