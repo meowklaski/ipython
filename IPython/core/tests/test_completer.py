@@ -268,6 +268,28 @@ def test_local_file_completions():
         comp = set(prefix+s for s in suffixes)
         nt.assert_true(comp.issubset(set(c)))
 
+def test_jedi():
+    #import jedi
+    #if tuple(int(i) for i in jedi.__version__.split('.')[:3]) >= (0,10):
+    # known broken on jedi 0.9
+    #    yield _, 'a[0].', 5, 'real', "Should have completed on a[0].: %s"
+
+    # check this does not crash
+    s ='"foo".capitalise().'
+    ip = get_ipython()
+    # line 1 col 19
+    _,c = ip.complete(s,s)
+
+    # check that keyword argument to function work:
+
+    # def foo(param=):
+    # pass
+    # foo(|
+    # foo(pa|
+    # foo(param|
+    # foo(param=|
+
+    # both staticallay (foo defined on the same line) and dynamically.
 
 def test_greedy_completions():
     ip = get_ipython()
@@ -280,11 +302,19 @@ def test_greedy_completions():
             _,c = ip.complete('.', line=line, cursor_pos=cursor_pos)
             nt.assert_in(expect, c, message%c)
 
-        yield _, 'a[0].', 5, '.real', "Should have completed on a[0].: %s"
-        yield _, 'a[0].r', 6, '.real', "Should have completed on a[0].r: %s"
+        yield _, 'a[0].', 5, 'a[0].real', "Should have completed on a[0].: %s"
+        yield _, 'a[0].r', 6, 'a[0].real', "Should have completed on a[0].r: %s"
+
+        try:
+            import jedi
+            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) >= (0,10):
+                yield _, 'a[0].', 5, 'a[0].real', "Should have completed on a[0].: %s"
+
+        except ImportError:
+            pass
         
         if sys.version_info > (3,4):
-            yield _, 'a[0].from_', 10, '.from_bytes', "Should have completed on a[0].from_: %s"
+            yield _, 'a[0].from_', 10, 'a[0].from_bytes', "Should have completed on a[0].from_: %s"
        
 
         def _2():

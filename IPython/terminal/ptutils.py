@@ -76,14 +76,14 @@ class IPythonPTCompleter(Completer):
 
         if jedi_matches:
             for jm in jedi_matches:
-                delta = len(jm.name) - len(jm.complete)
-                if delta >  document.cursor_position_col:
+                delta = len(jm.name_with_symbols) - len(jm.complete)
+                if delta >  document.cursor_position_col or delta  < 0:
                     raise ValueError('OhNoooo this completion went wrong, please report a bug with : \n'
                             '   delta: %s \n' 
                             '   cursor_position: %s\n'
-                            '   jedimatch %s \n' % 
-                            (delta,document.cursor_position_col,jedi_matches))
-                yield Completion(jm.name, start_position=-delta, display=jm.name_with_symbols)
+                            '   jedimatch %s|%s \n' % 
+                            (delta,document.cursor_position_col,jm.name, jm.complete))
+                yield Completion(jm.name_with_symbols, start_position=-delta, display=jm.name_with_symbols)
 
             # use for debug purpose to visually show a separation between the jedi
             # and IPython base completions.

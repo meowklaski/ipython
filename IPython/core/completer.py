@@ -769,10 +769,17 @@ class IPCompleter(Completer):
             namespaces.append(self.global_namespace)
 
         # cursor_pos is an it, jedi wants line and column
-
         interpreter = jedi.Interpreter(
             line_buffer, namespaces, column=cursor_position)
-        return interpreter.completions()
+        try:
+            return interpreter.completions()
+        except ValueError:
+            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) < (0,10):
+                # we know jedi 0.9 can crash... 0.10 should not.
+                # silence 0.9 crashes.
+                return []
+            else :
+                raise
 
     def _python_jedi_matches(self, text, line_buffer, cursor_pos, completions):
         """Match attributes or global Python names using Jedi."""
