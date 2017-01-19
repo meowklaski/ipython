@@ -756,7 +756,7 @@ class IPCompleter(Completer):
 
         """
 
-    def _jedi_matches(self, text, line_buffer, cursor_position):
+    def _jedi_matches(self, text, line_buffer, cursor_position, cursor_line, full_text):
         if line_buffer.startswith('aimport ') or line_buffer.startswith('%aimport '):
             return ()
         namespaces = []
@@ -769,8 +769,13 @@ class IPCompleter(Completer):
             namespaces.append(self.global_namespace)
 
         # cursor_pos is an it, jedi wants line and column
+        #if cursor_line is None:
+            #cursor_line=0
+        print('==============')
+        print('jediing', line_buffer, cursor_position, cursor_line+1)
+        print('--------------')
         interpreter = jedi.Interpreter(
-            line_buffer, namespaces, column=cursor_position)
+            full_text, namespaces, column=cursor_position, line=cursor_line+1)
         try:
             return interpreter.completions()
         except ValueError:
@@ -1217,11 +1222,10 @@ class IPCompleter(Completer):
         with provisionalcompleter():
             return self._complete(line_buffer, cursor_pos, text=text)[:2]
 
-    def _complete(self, line_buffer, cursor_pos, *, text=None):
+    def _complete(self, line_buffer, cursor_pos, *, text=None, cursor_line=None, full_text=None):
         """
         Like complete but also returns raw jedi completions.
         """
-
         warnings.warn("_complete is a provisional API (as of IPython 6.0). " 
                       "It may change without warnings. "
                       "Use in corresponding context manager.",
@@ -1266,7 +1270,9 @@ class IPCompleter(Completer):
         # richer completion semantics in other evironments.
         completions = None
         if self.use_jedi:
-            completions = self._jedi_matches(text, line_buffer, cursor_pos)
+            if not full_text:
+                full_text = line_buffer
+            completions = self._jedi_matches(text, line_buffer, cursor_pos, cursor_line, full_text)
         if custom_res is not None:
             # did custom completers produce something?
             self.matches = custom_res

@@ -70,8 +70,10 @@ class IPythonPTCompleter(Completer):
         with self.shell.pt_cli.patch_stdout_context():
             with provisionalcompleter():
                 used, matches, jedi_matches = self.ipy_completer._complete(
-                                line_buffer=document.current_line,
-                                cursor_pos=document.cursor_position_col
+                                line_buffer=document.current_line, # get full bugger here
+                                cursor_pos=document.cursor_position_col,
+                                cursor_line=document.cursor_position_row,
+                                full_text=document.text,
             )
 
         if jedi_matches:
