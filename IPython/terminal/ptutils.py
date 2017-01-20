@@ -19,11 +19,12 @@ import pygments.lexers as pygments_lexers
 
 _completion_sentinel = object()
 
+
 def cursor_to_position(text, line, column):
     lines = text.split('\n')
-    assert line <= len(lines), '{} <!= {}'.format(str(line) , str(len(lines)))
+    assert line <= len(lines), '{} <!= {}'.format(str(line), str(len(lines)))
 
-    return sum(len(l)+1 for l in lines[:line])+column
+    return sum(len(l) + 1 for l in lines[:line]) + column
 
 
 class IPythonPTCompleter(Completer):
@@ -52,7 +53,7 @@ class IPythonPTCompleter(Completer):
             cursor_row = document.cursor_position_row
             cursor_col = document.cursor_position_col
             cursor_position = document.cursor_position
-            offset = cursor_to_position(body, cursor_row , cursor_col)
+            offset = cursor_to_position(body, cursor_row, cursor_col)
             yield from self._get_completions(body, offset, cursor_position)
 
     def _get_completions(self, body, offset, cursor_position):
@@ -72,11 +73,12 @@ class IPythonPTCompleter(Completer):
             if wcwidth(text[0]) == 0:
                 if cursor_position + c.start > 0:
                     char_before = body[c.start - 1]
-                    fixed_text = unicodedata.normalize('NFC', char_before + text)
+                    fixed_text = unicodedata.normalize(
+                        'NFC', char_before + text)
 
                     # Yield the modified completion instead, if this worked.
                     if wcwidth(text[0:1]) == 1:
-                        yield Completion(fixed_text, start_position=c.start-offset- 1)
+                        yield Completion(fixed_text, start_position=c.start - offset - 1)
                         continue
 
             # TODO: Use Jedi to determine meta_text
@@ -84,7 +86,7 @@ class IPythonPTCompleter(Completer):
             # meta_text = ''
             # yield Completion(m, start_position=start_pos,
             #                  display_meta=meta_text)
-            yield Completion(c.text, start_position=c.start-offset)
+            yield Completion(c.text, start_position=c.start - offset)
 
 class IPythonPTLexer(Lexer):
     """

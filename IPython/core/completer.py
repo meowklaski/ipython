@@ -179,6 +179,7 @@ def completions_sorting_key(word):
 
     return prio1, word, prio2
 
+
 class Completion:
 
     def __init__(self, start, end, text):
@@ -187,18 +188,18 @@ class Completion:
         self.text = text
 
     def __repr__(self):
-        return '<Completion start=%s end=%s text=%r>' %(self.start, self.end, self.text)
+        return '<Completion start=%s end=%s text=%r>' % (self.start, self.end, self.text)
 
     def __eq__(self, other):
-        return self.start==other.start and \
-        self.end==other.end and \
-        self.text==other.text
+        return self.start == other.start and \
+            self.end == other.end and \
+            self.text == other.text
 
     def __hash__(self):
         return hash((self.start, self.end, self.text))
 
 
-    
+
 
 @undoc
 class Bunch(object): pass
@@ -262,11 +263,16 @@ class CompletionSplitter(object):
         l = line if cursor_pos is None else line[:cursor_pos]
         return self._delim_re.split(l)[-1]
 
-class ProvisionalCompleterWarning(FutureWarning):pass
+
+class ProvisionalCompleterWarning(FutureWarning):
+    pass
+
+
 warnings.filterwarnings('error', category=ProvisionalCompleterWarning)
 
 
 from contextlib import contextmanager
+
 
 @contextmanager
 def provisionalcompleter(action='ignore'):
@@ -287,8 +293,8 @@ class Completer(Configurable):
     ).tag(config=True)
 
     use_jedi = Bool(default_value=JEDI_INSTALLED, config=True,
-        help="Experimental: Use Jedi to generate autocompletions. "
-             "Default to True if jedi is installed")
+                    help="Experimental: Use Jedi to generate autocompletions. "
+                    "Default to True if jedi is installed")
     
 
     def __init__(self, namespace=None, global_namespace=None, **kwargs):
@@ -473,7 +479,6 @@ def match_dict_keys(keys, prefix, delims):
         # then reinsert prefix from start of token
         matched.append('%s%s' % (token_prefix, rem_repr))
     return quote, token_start, matched
-
 
 
 def position_to_cursor(text, pos):
@@ -777,7 +782,6 @@ class IPCompleter(Completer):
             comp += [ pre+m for m in line_magics if m.startswith(bare_text)]
         return [cast_unicode_py2(c) for c in comp]
 
-
     def _jedi_matches(self, text, line_buffer, cursor_position, cursor_line, full_text):
         if line_buffer.startswith('aimport ') or line_buffer.startswith('%aimport '):
             return ()
@@ -792,17 +796,17 @@ class IPCompleter(Completer):
 
         # cursor_pos is an it, jedi wants line and column
         if cursor_line is None:
-           cursor_line=0
+           cursor_line = 0
         interpreter = jedi.Interpreter(
-            full_text, namespaces, column=cursor_position, line=cursor_line+1)
+            full_text, namespaces, column=cursor_position, line=cursor_line + 1)
         try:
             return interpreter.completions()
         except ValueError:
-            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) < (0,11):
+            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) < (0, 11):
                 # we know jedi 0.9 can crash... 0.10 should not.
                 # silence 0.9 crashes.
                 return []
-            else :
+            else:
                 raise
 
     def python_matches(self, text):
@@ -1165,7 +1169,7 @@ class IPCompleter(Completer):
 
         return None
 
-    def completions(self, text:str, offset:int)->Iterator[Completion]:
+    def completions(self, text: str, offset: int)->Iterator[Completion]:
         """Returns an iterator over the possible completions
         
         Parameters:
@@ -1190,7 +1194,7 @@ class IPCompleter(Completer):
         Combining characters may span more that one position in the
         text.
         """
-        warnings.warn("_complete is a provisional API (as of IPython 6.0). " 
+        warnings.warn("_complete is a provisional API (as of IPython 6.0). "
                       "It may change without warnings. "
                       "Use in corresponding context manager.",
                       category=ProvisionalCompleterWarning, stacklevel=2)
@@ -1202,7 +1206,7 @@ class IPCompleter(Completer):
         # >>> a=1
         # >>> a.<tab>
         # May returns:
-        #  - `a.real` from 0 to 2 
+        #  - `a.real` from 0 to 2
         #  - `.real` from 1 to 2
         # the current code does not (yet) check for such equivalence
         seen = set({})
@@ -1212,16 +1216,16 @@ class IPCompleter(Completer):
             yield c
             seen.add(c)
 
-    def _completions(self, full_text:str, offset:int)->Iterator[Completion]:
-        before = full_text[:offset] 
+    def _completions(self, full_text: str, offset: int)->Iterator[Completion]:
+        before = full_text[:offset]
         cursor_line, cursor_column = position_to_cursor(full_text, offset)
 
-        matched_text, matches, jedi_matches = self._complete(full_text=full_text, cursor_line=cursor_line, cursor_pos=cursor_column)
-        
+        matched_text, matches, jedi_matches = self._complete(
+            full_text=full_text, cursor_line=cursor_line, cursor_pos=cursor_column)
 
         for jm in jedi_matches:
             delta = len(jm.name_with_symbols) - len(jm.complete)
-            yield Completion(start=offset-delta, end=offset, text=jm.name_with_symbols)
+            yield Completion(start=offset - delta, end=offset, text=jm.name_with_symbols)
 
         start_offset = before.rfind(matched_text)
 
@@ -1230,7 +1234,8 @@ class IPCompleter(Completer):
         if jedi_matches and matches:
             yield Completion(start=start_offset, end=offset, text='--jedi/ipython--')
 
-        # I'm unsure if this is always true, so let's assert and see if it crash 
+        # I'm unsure if this is always true, so let's assert and see if it
+        # crash
         assert before.endswith(matched_text)
         for m in matches:
             yield Completion(start=start_offset, end=offset, text=m)
@@ -1270,11 +1275,11 @@ class IPCompleter(Completer):
                       'IPython 6.0 and will be replaced by `Completer.completion`.',
                       PendingDeprecationWarning)
         # potential todo, FOLD the 3rd throw away argument of _complete
-        # into the first 2 one. 
+        # into the first 2 one.
         return self._complete(line_buffer=line_buffer, cursor_pos=cursor_pos, text=text)[:2]
 
-    def _complete(self, *, line_buffer=None, cursor_pos=None, text=None, 
-            cursor_line=None, full_text=None, return_jedi_results=True ) -> (str, List[str], List[object]):
+    def _complete(self, *, line_buffer=None, cursor_pos=None, text=None,
+                  cursor_line=None, full_text=None, return_jedi_results=True) -> (str, List[str], List[object]):
         """
         Like complete but can also returns raw jedi completions.
 
@@ -1328,7 +1333,8 @@ class IPCompleter(Completer):
         if self.use_jedi and return_jedi_results:
             if not full_text:
                 full_text = line_buffer
-            completions = self._jedi_matches(text, line_buffer, cursor_pos, cursor_line, full_text)
+            completions = self._jedi_matches(
+                text, line_buffer, cursor_pos, cursor_line, full_text)
         if custom_res is not None:
             # did custom completers produce something?
             self.matches = custom_res

@@ -268,6 +268,7 @@ def test_local_file_completions():
         comp = set(prefix+s for s in suffixes)
         nt.assert_true(comp.issubset(set(c)))
 
+
 def test_jedi():
     #import jedi
     #if tuple(int(i) for i in jedi.__version__.split('.')[:3]) >= (0,10):
@@ -275,10 +276,10 @@ def test_jedi():
     #    yield _, 'a[0].', 5, 'real', "Should have completed on a[0].: %s"
 
     # check this does not crash
-    s ='"foo".capitalise().'
+    s = '"foo".capitalise().'
     ip = get_ipython()
     # line 1 col 19
-    _,c = ip.complete(s,s)
+    _, c = ip.complete(s, s)
 
     # check that keyword argument to function work:
 
@@ -292,7 +293,7 @@ def test_jedi():
     # both staticallay (foo defined on the same line) and dynamically.
 
     import jedi
-    jv =  tuple(int(i) for i in jedi.__version__.split('.')[:3]) 
+    jv = tuple(int(i) for i in jedi.__version__.split('.')[:3])
 
     from IPython.core.completer import provisionalcompleter, Completion
     from nose.tools import assert_in, assert_not_in
@@ -300,16 +301,15 @@ def test_jedi():
     def _test_complete(s, comp):
         l = len(s)
         completions = set(ip.Completer.completions(s, l))
-        assert_in(Completion(l,l,comp), completions)
+        assert_in(Completion(l, l, comp), completions)
 
     def _test_not_complete(s, comp):
         l = len(s)
         completions = set(ip.Completer.completions(s, l))
-        assert_not_in(Completion(l,l,comp), completions)
-
+        assert_not_in(Completion(l, l, comp), completions)
 
     with provisionalcompleter():
-        if jv >= (0,10):
+        if jv >= (0, 10):
             # this crash old jedi versions, so let's not test it.
             yield _test_complete, 'a=1;a.', 'real'
         else:
@@ -340,22 +340,22 @@ def test_greedy_completions():
 
         try:
             import jedi
-            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) >= (0,10):
+            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) >= (0, 10):
                 yield _, 'a[0].', 5, 'a[0].real', "Should have completed on a[0].: %s"
 
         except ImportError:
             pass
-        
-        if sys.version_info > (3,4):
+
+        if sys.version_info > (3, 4):
             yield _, 'a[0].from_', 10, 'a[0].from_bytes', "Should have completed on a[0].from_: %s"
-       
 
         def _2():
-            # jedi bug, this will be empty, makeitfail for now, 
+            # jedi bug, this will be empty, makeitfail for now,
             # once jedi is fixed, switch to assert_in
             # https://github.com/davidhalter/jedi/issues/718
-            _,c = ip.complete('.',line='a[0].from', cursor_pos=9)
-            nt.assert_not_in('.from_bytes', c, "Should not have completed on a[0].from (jedi bug), if fails, update test to assert_in: %s"%c)
+            _, c = ip.complete('.', line='a[0].from', cursor_pos=9)
+            nt.assert_not_in(
+                '.from_bytes', c, "Should not have completed on a[0].from (jedi bug), if fails, update test to assert_in: %s" % c)
         yield _2
 
 
