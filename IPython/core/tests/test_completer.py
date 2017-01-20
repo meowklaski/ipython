@@ -298,10 +298,12 @@ def test_jedi():
     from IPython.core.completer import provisionalcompleter, Completion
     from nose.tools import assert_in, assert_not_in
 
-    def _test_complete(s, comp):
+    def _test_complete(s, comp, start=None, end=None):
         l = len(s)
+        start = start if start is not None else l
+        end = end if end is not None else l
         completions = set(ip.Completer.completions(s, l))
-        assert_in(Completion(l, l, comp), completions)
+        assert_in(Completion(start, end, comp), completions)
 
     def _test_not_complete(s, comp):
         l = len(s)
@@ -319,7 +321,7 @@ def test_jedi():
         yield _test_complete, 'a=(1,"foo");a[0].', 'real'
         yield _test_complete, 'a=(1,"foo");a[1].', 'capitalize'
         yield _test_not_complete, 'a=(1,"foo");a[0].', 'capitalize'
-        yield _test_complete, 'im', 'import'
+        yield _test_complete, 'im', 'import', 0, 2
 
 
 
