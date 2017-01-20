@@ -59,6 +59,9 @@ else:
     PROTECTABLES = ' ()[]{}?=\\|;:\'#*"^&'
 
 
+_deprecation_readline_sentinel = object()
+
+
 def has_open_quotes(s):
     """Return whether a string has open quotes.
 
@@ -260,7 +263,7 @@ class CompletionSplitter(object):
         return self._delim_re.split(l)[-1]
 
 class ProvisionalCompleterWarning(FutureWarning):pass
-# warnings.filterwarnings('error', category=ProvisionalCompleterWarning)
+warnings.filterwarnings('error', category=ProvisionalCompleterWarning)
 
 
 from contextlib import contextmanager
@@ -284,9 +287,8 @@ class Completer(Configurable):
     ).tag(config=True)
 
     use_jedi = Bool(default_value=JEDI_INSTALLED, config=True,
-                                help="""Experimental: Use Jedi to generate autocompletions. "
-            "Default to True if jedi is installed
-        """)
+        help="Experimental: Use Jedi to generate autocompletions. "
+             "Default to True if jedi is installed")
     
 
     def __init__(self, namespace=None, global_namespace=None, **kwargs):
@@ -301,11 +303,6 @@ class Completer(Configurable):
         An optional second namespace can be given.  This allows the completer
         to handle cases where both the local and global scopes need to be
         distinguished.
-
-        Completer instances should be used as the completion mechanism of
-        readline via the set_completer() call:
-
-        readline.set_completer(Completer(my_namespace).complete)
         """
 
         # Don't bind to namespace quite yet, but flag whether the user wants a
@@ -597,12 +594,10 @@ class IPCompleter(Completer):
     ).tag(config=True)
 
     def __init__(self, shell=None, namespace=None, global_namespace=None,
-                 use_readline=False, config=None, **kwargs):
+                 use_readline=_deprecation_readline_sentinel, config=None, **kwargs):
         """IPCompleter() -> completer
 
-        Return a completer object suitable for use by the readline library
-        via readline.set_completer().
-
+        Return a completer object.
         Inputs:
 
         - shell: a pointer to the ipython shell itself.  This is needed
@@ -616,14 +611,14 @@ class IPCompleter(Completer):
           both Python scopes are visible.
 
         use_readline : bool, optional
-          DEPRECATED, ignored.
+          DEPRECATED, ignored since IPython 6.0
         """
 
         self.magic_escape = ESC_MAGIC
         self.splitter = CompletionSplitter()
 
-        if use_readline:
-            warnings.warn('The use_readline parameter is deprecated and ignored since IPython 6.0.',
+        if use_readline is not _deprecation_readline_sentinel:
+            warnings.warn('The `use_readline` parameter is deprecated and ignored since IPython 6.0.',
                           DeprecationWarning, stacklevel=2)
 
         # _greedy_changed() depends on splitter and readline being defined:
@@ -1322,7 +1317,7 @@ class IPCompleter(Completer):
         return self._complete(line_buffer=line_buffer, cursor_pos=cursor_pos, text=text)[:2]
 
     def _complete(self, *, line_buffer, cursor_pos, text=None, 
-            cursor_line=None, full_text=None, return_jedi_results=True ) -> (str, List(str), List[object]):
+            cursor_line=None, full_text=None, return_jedi_results=True ) -> (str, List[str], List[object]):
         """
         Like complete but can also returns raw jedi completions.
 
