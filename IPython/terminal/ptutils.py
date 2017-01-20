@@ -19,29 +19,11 @@ import pygments.lexers as pygments_lexers
 
 _completion_sentinel = object()
 
-from functools import wraps
+def cursor_to_position(text, line, column):
+    lines = text.split('\n')
+    assert line <= len(lines), '{} <!= {}'.format(str(line) , str(len(lines)))
 
-def _completion_debugger(function):
-    """
-    Wrapper that will analyse completion sent both before and after the
-    _completion_sentinel and mark those in the second group not in the first.
-    """
-    @wraps(function)
-    def new_get_completions(self, document, complete_event):
-        completions  = list(function(self, document, complete_event))
-        from_jedi = []
-        from_ipython = []
-        push = from_jedi
-        for e in completions:
-            if e is _completion_sentinel:
-                push = from_ipython
-            else:
-                push.append(e)
-        yield from from_jedi
-        if any([(_completion_sentinel is c) for c in completions]):
-            yield Completion('', display='--- jedi/ipython ---')
-        yield from [a for a in from_ipython if a not in from_jedi]
-    return new_get_completions
+    return sum(len(l)+1 for l in lines[:line])+column
 
 
 class IPythonPTCompleter(Completer):
@@ -59,68 +41,41 @@ class IPythonPTCompleter(Completer):
         else:
             return self.shell.Completer
 
-    @_completion_debugger
     def get_completions(self, document, complete_event):
         if not document.current_line.strip():
             return
-
         # Some bits of our completion system may print stuff (e.g. if a module
         # is imported). This context manager ensures that doesn't interfere with
         # the prompt.
-        with self.shell.pt_cli.patch_stdout_context():
-            with provisionalcompleter():
-                used, matches, jedi_matches = self.ipy_completer._complete(
-                                line_buffer=document.current_line, # get full bugger here
-                                cursor_pos=document.cursor_position_col,
-                                cursor_line=document.cursor_position_row,
-                                full_text=document.text,
-            )
+        with self.shell.pt_cli.patch_stdout_context(), provisionalcompleter():
+            body = document.text
+            offset = cursor_to_position(body,  document.cursor_position_row, document.cursor_position_col)
+            completions = self.ipy_completer.completions(body, offset)
+            for c in completions:
+                if not c.text:
+                    # Guard against completion machinery giving us an empty string.
+                    continue
+                text = unicodedata.normalize('NFC', c.text)
+                # When the first character of the completion has a zero length,
+                # then it's probably a decomposed unicode character. E.g. caused by
+                # the "\dot" completion. Try to compose again with the previous
+                # character.
+                if wcwidth(text[0]) == 0:
+                    if document.cursor_position + c.start > 0:
+                        char_before = body[c.start - 1]
+                        fixed_text = unicodedata.normalize('NFC', char_before + text)
 
-        if jedi_matches:
-            for jm in jedi_matches:
-                delta = len(jm.name_with_symbols) - len(jm.complete)
-                if delta >  document.cursor_position_col or delta  < 0:
-                    raise ValueError('OhNoooo this completion went wrong, please report a bug with : \n'
-                            '   delta: %s \n' 
-                            '   cursor_position: %s\n'
-                            '   jedimatch %s|%s \n' % 
-                            (delta,document.cursor_position_col,jm.name, jm.complete))
-                yield Completion(jm.name_with_symbols, start_position=-delta, display=jm.name_with_symbols)
+                        # Yield the modified completion instead, if this worked.
+                        if wcwidth(text[0:1]) == 1:
+                            yield Completion(fixed_text, start_position=c.start-offset- 1)
+                            continue
 
-            # use for debug purpose to visually show a separation between the jedi
-            # and IPython base completions.
-        if jedi_matches is not None:
-            yield _completion_sentinel
-
-        start_pos = -len(used)
-        for m in matches:
-            if not m:
-                # Guard against completion machinery giving us an empty string.
-                continue
-
-            m = unicodedata.normalize('NFC', m)
-
-            # When the first character of the completion has a zero length,
-            # then it's probably a decomposed unicode character. E.g. caused by
-            # the "\dot" completion. Try to compose again with the previous
-            # character.
-            if wcwidth(m[0]) == 0:
-                if document.cursor_position + start_pos > 0:
-                    char_before = document.text[document.cursor_position + start_pos - 1]
-                    m = unicodedata.normalize('NFC', char_before + m)
-
-                    # Yield the modified completion instead, if this worked.
-                    if wcwidth(m[0:1]) == 1:
-                        yield Completion(m, start_position=start_pos - 1)
-                        continue
-
-            # TODO: Use Jedi to determine meta_text
-            # (Jedi currently has a bug that results in incorrect information.)
-            # meta_text = ''
-            # yield Completion(m, start_position=start_pos,
-            #                  display_meta=meta_text)
-            yield Completion(m, start_position=start_pos)
-
+                # TODO: Use Jedi to determine meta_text
+                # (Jedi currently has a bug that results in incorrect information.)
+                # meta_text = ''
+                # yield Completion(m, start_position=start_pos,
+                #                  display_meta=meta_text)
+                yield Completion(c.text, start_position=c.start-offset)
 
 class IPythonPTLexer(Lexer):
     """

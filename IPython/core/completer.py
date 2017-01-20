@@ -27,6 +27,7 @@ import unicodedata
 import string
 import warnings
 from importlib import import_module
+from typing import Iterator, List
 
 from traitlets.config.configurable import Configurable
 from IPython.core.error import TryNext
@@ -175,6 +176,26 @@ def completions_sorting_key(word):
 
     return prio1, word, prio2
 
+class Completion:
+
+    def __init__(self, start, end, text):
+        self.start = start
+        self.end = end
+        self.text = text
+
+    def __repr__(self):
+        return '<Completion start=%s end=%s text=%r>' %(self.start, self.end, self.text)
+
+    def __eq__(self, other):
+        return self.start==other.start and \
+        self.end==other.end and \
+        self.text==other.text
+
+    def __hash__(self):
+        return hash((self.start, self.end, self.text))
+
+
+    
 
 @undoc
 class Bunch(object): pass
@@ -455,6 +476,15 @@ def match_dict_keys(keys, prefix, delims):
         # then reinsert prefix from start of token
         matched.append('%s%s' % (token_prefix, rem_repr))
     return quote, token_start, matched
+
+
+
+def position_to_cursor(text, pos):
+    before = text[:pos]
+    blines = before.split('\n')  # ! splitnes trim trailing \n
+    line = before.count('\n')
+    col = len(blines[-1])
+    return line, col
 
 
 def _safe_isinstance(obj, module, class_name):
@@ -752,9 +782,6 @@ class IPCompleter(Completer):
             comp += [ pre+m for m in line_magics if m.startswith(bare_text)]
         return [cast_unicode_py2(c) for c in comp]
 
-        """
-
-        """
 
     def _jedi_matches(self, text, line_buffer, cursor_position, cursor_line, full_text):
         if line_buffer.startswith('aimport ') or line_buffer.startswith('%aimport '):
@@ -769,11 +796,8 @@ class IPCompleter(Completer):
             namespaces.append(self.global_namespace)
 
         # cursor_pos is an it, jedi wants line and column
-        #if cursor_line is None:
-            #cursor_line=0
-        print('==============')
-        print('jediing', line_buffer, cursor_position, cursor_line+1)
-        print('--------------')
+        if cursor_line is None:
+           cursor_line=0
         interpreter = jedi.Interpreter(
             full_text, namespaces, column=cursor_position, line=cursor_line+1)
         try:
@@ -1189,6 +1213,77 @@ class IPCompleter(Completer):
 
         return None
 
+    def completions(self, text:str, offset:int)->Iterator[Completion]:
+        """Returns an iterator over the possible completions
+        
+        Parameters:
+        -----------
+        text
+            Full text of the current input, multi line string.
+        offset
+            Integer representing the position of the cursor in `text`. Offset
+            is 0-based indexed.
+
+        Yields:
+        -------
+            IPython.core.completer.Completion object
+
+
+        The cursor on a text can either be seen as being "in between"
+        characters or "On" a character depending on the interface visible to
+        the user. For consistency the cursor being on "in between" characters X
+        and Y is equivalent to the cursor being "on" character Y, that is to say
+        the character the cursor is on is considered as being after the cursor.
+
+        Combining characters may span more that one position in the
+        text.
+        """
+        warnings.warn("_complete is a provisional API (as of IPython 6.0). " 
+                      "It may change without warnings. "
+                      "Use in corresponding context manager.",
+                      category=ProvisionalCompleterWarning, stacklevel=2)
+
+        # Possible Improvements / Known limitation
+        ##########################################
+        # Completions may be identical even if they have different ranges and
+        # text. For example:
+        # >>> a=1
+        # >>> a.<tab>
+        # May returns:
+        #  - `a.real` from 0 to 2 
+        #  - `.real` from 1 to 2
+        # the current code does not (yet) check for such equivalence
+        seen = set({})
+        for c in self._completions(text, offset):
+            if c and (c in seen):
+                continue
+            yield c
+            seen.add(c)
+
+    def _completions(self, full_text:str, offset:int)->Iterator[Completion]:
+        before = full_text[:offset] 
+        cursor_line, cursor_column = position_to_cursor(full_text, offset)
+
+        matched_text, matches, jedi_matches = self._complete(full_text=full_text, cursor_line=cursor_line, cursor_pos=cursor_column)
+        
+
+        for jm in jedi_matches:
+            delta = len(jm.name_with_symbols) - len(jm.complete)
+            yield Completion(start=offset-delta, end=offset, text=jm.name_with_symbols)
+
+        start_offset = before.rfind(matched_text)
+
+        # TODO:
+        # Supress this, right now just for debug.
+        if jedi_matches and matches:
+            yield Completion(start=start_offset, end=offset, text='--jedi/ipython--')
+
+        # I'm unsure if this is always true, so let's assert and see if it crash 
+        assert before.endswith(matched_text)
+        for m in matches:
+            yield Completion(start=start_offset, end=offset, text=m)
+
+
     def complete(self, text=None, line_buffer=None, cursor_pos=None):
         """Find completions for the given text and line context.
 
@@ -1219,17 +1314,23 @@ class IPCompleter(Completer):
         matches : list
           A list of completion matches.
         """
-        with provisionalcompleter():
-            return self._complete(line_buffer, cursor_pos, text=text)[:2]
+        warnings.warn('`Completer.complete` is pending deprecation since '
+                      'IPython 6.0 and will be replace by `Completer.completion`.',
+                      PendingDeprecationWarning)
+        # potential todo, FOLD the 3rd throw away argument of _complete
+        # into the first 2 one. 
+        return self._complete(line_buffer=line_buffer, cursor_pos=cursor_pos, text=text)[:2]
 
-    def _complete(self, line_buffer, cursor_pos, *, text=None, cursor_line=None, full_text=None):
+    def _complete(self, *, line_buffer, cursor_pos, text=None, 
+            cursor_line=None, full_text=None, return_jedi_results=True ) -> (str, List(str), List[object]):
         """
-        Like complete but also returns raw jedi completions.
+        Like complete but can also returns raw jedi completions.
+
+        With current provisional API, cursor_pos act both (depending on the
+        caller) as the offset in the `text` or `line_buffer`, or as the
+        `column` when passing multiline strings this could/should be renamed
+        but would add extra noise.
         """
-        warnings.warn("_complete is a provisional API (as of IPython 6.0). " 
-                      "It may change without warnings. "
-                      "Use in corresponding context manager.",
-                      category=ProvisionalCompleterWarning, stacklevel=2)
 
         # if the cursor position isn't given, the only sane assumption we can
         # make is that it's at the end of the line (the common case)
@@ -1239,20 +1340,23 @@ class IPCompleter(Completer):
         if self.use_main_ns:
             self.namespace = __main__.__dict__
 
+        # if text is either None or an empty string, rely on the line buffer
+        if (not line_buffer) and full_text:
+            line_buffer = full_text.split('\n')[cursor_line]
+        if not text:
+            text = self.splitter.split_line(line_buffer, cursor_pos)
+
         base_text = text if not line_buffer else line_buffer[:cursor_pos]
         latex_text, latex_matches = self.latex_matches(base_text)
         if latex_matches:
-            return latex_text, latex_matches
+            return latex_text, latex_matches, ()
         name_text = ''
         name_matches = []
         for meth in (self.unicode_name_matches, back_latex_name_matches, back_unicode_name_matches):
             name_text, name_matches = meth(base_text)
             if name_text:
-                return name_text, name_matches
+                return name_text, name_matches, ()
         
-        # if text is either None or an empty string, rely on the line buffer
-        if not text:
-            text = self.splitter.split_line(line_buffer, cursor_pos)
 
         # If no line buffer is given, assume the input text is all there was
         if line_buffer is None:
@@ -1268,8 +1372,8 @@ class IPCompleter(Completer):
         # different types of objects.  The rlcomplete() method could then
         # simply collapse the dict into a list for readline, but we'd have
         # richer completion semantics in other evironments.
-        completions = None
-        if self.use_jedi:
+        completions = ()
+        if self.use_jedi and return_jedi_results:
             if not full_text:
                 full_text = line_buffer
             completions = self._jedi_matches(text, line_buffer, cursor_pos, cursor_line, full_text)
