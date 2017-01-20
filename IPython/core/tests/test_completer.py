@@ -291,6 +291,31 @@ def test_jedi():
 
     # both staticallay (foo defined on the same line) and dynamically.
 
+
+    from IPython.core.completer import provisionalcompleter, Completion
+    from nose.tools import assert_in, assert_not_in
+
+    def _test_complete(s, comp):
+        l = len(s)
+        completions = set(ip.Completer.completions(s, l))
+        assert_in(Completion(l,l,comp), completions)
+
+    def _test_not_complete(s, comp):
+        l = len(s)
+        completions = set(ip.Completer.completions(s, l))
+        assert_not_in(Completion(l,l,comp), completions)
+
+
+    with provisionalcompleter():
+        yield _test_complete, 'a=1;a.', 'real'
+        yield _test_complete, 'a=(1,"foo");a[0].', 'real'
+        yield _test_complete, 'a=(1,"foo");a[1].', 'capitalize'
+        yield _test_not_complete, 'a=(1,"foo");a[0].', 'capitalize'
+
+
+
+
+
 def test_greedy_completions():
     ip = get_ipython()
     ip.ex('a=list(range(5))')

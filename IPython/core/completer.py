@@ -1273,7 +1273,7 @@ class IPCompleter(Completer):
         # into the first 2 one. 
         return self._complete(line_buffer=line_buffer, cursor_pos=cursor_pos, text=text)[:2]
 
-    def _complete(self, *, line_buffer, cursor_pos, text=None, 
+    def _complete(self, *, line_buffer=None, cursor_pos=None, text=None, 
             cursor_line=None, full_text=None, return_jedi_results=True ) -> (str, List[str], List[object]):
         """
         Like complete but can also returns raw jedi completions.
