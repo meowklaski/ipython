@@ -805,49 +805,6 @@ class IPCompleter(Completer):
             else :
                 raise
 
-    def _python_jedi_matches(self, text, line_buffer, cursor_pos, completions):
-        """Match attributes or global Python names using Jedi."""
-
-        path = jedi.parser.user_context.UserContext(line_buffer,
-                                                    (1, len(line_buffer))).get_path_until_cursor()
-        path, dot, like = jedi.api.helpers.completion_parts(path)
-
-
-        if text.startswith('.'):
-            # text will be `.` on completions like `a[0].<tab>`
-            before = dot
-        else:
-            before = line_buffer[:len(line_buffer) - len(like)]
-
-
-        def trim_start(completion):
-            """completions need to start with `text`, trim the beginning until it does"""
-            ltext = text.lower()
-            lcomp  = completion.lower()
-            if ltext in lcomp and not (lcomp.startswith(ltext)):
-                start_index = lcomp.index(ltext)
-                if cursor_pos:
-                    if start_index >= cursor_pos:
-                        start_index = min(start_index, cursor_pos)
-                return completion[start_index:]
-            return completion
-        
-
-        completion_text = [c.name_with_symbols for c in completions]
-
-        if self.omit__names:
-            if self.omit__names == 1:
-                # true if txt is _not_ a __ name, false otherwise:
-                no__name = lambda txt: not txt.startswith('__')
-            else:
-                # true if txt is _not_ a _ name, false otherwise:
-                no__name = lambda txt: not txt.startswith('_')
-            completion_text = filter(no__name, completion_text)
-
-
-        return [trim_start(before + c_text) for c_text in completion_text]
-
-
     def python_matches(self, text):
         """Match attributes or global python names"""
         if "." in text:
