@@ -298,33 +298,30 @@ def test_jedi():
     from IPython.core.completer import provisionalcompleter, Completion
     from nose.tools import assert_in, assert_not_in
 
-    def _test_complete(s, comp, start=None, end=None):
+    def _test_complete(reason, s, comp, start=None, end=None):
         l = len(s)
         start = start if start is not None else l
         end = end if end is not None else l
         completions = set(ip.Completer.completions(s, l))
-        assert_in(Completion(start, end, comp), completions)
+        assert_in(Completion(start, end, comp), completions, reason)
 
-    def _test_not_complete(s, comp):
+    def _test_not_complete(reason, s, comp):
         l = len(s)
         completions = set(ip.Completer.completions(s, l))
-        assert_not_in(Completion(l, l, comp), completions)
+        assert_not_in(Completion(l, l, comp), completions, reason)
 
     with provisionalcompleter():
         if jv >= (0, 10):
             # this crash old jedi versions, so let's not test it.
-            yield _test_complete, 'a=1;a.', 'real'
+            yield _test_complete, 'jedi >0.9 should complete and not crash', 'a=1;a.', 'real'
         else:
             # lets check that it just does not crash
-            yield _test_not_complete, 'a=1;a.', 'real'
+            yield _test_not_complete, 'jedi >0.9 should not crash, so no completions',  'a=1;a.', 'real'
 
-        yield _test_complete, 'a=(1,"foo");a[0].', 'real'
-        yield _test_complete, 'a=(1,"foo");a[1].', 'capitalize'
-        yield _test_not_complete, 'a=(1,"foo");a[0].', 'capitalize'
-        yield _test_complete, 'im', 'import', 0, 2
-
-
-
+        yield _test_complete, 'can infer first argument', 'a=(1,"foo");a[0].', 'real'
+        yield _test_complete, 'can infer second argument', 'a=(1,"foo");a[1].', 'capitalize'
+        yield _test_not_complete, 'does not mix types', 'a=(1,"foo");a[0].', 'capitalize'
+        yield _test_complete, 'cover duplicate completions', 'im', 'import', 0, 2
 
 
 def test_greedy_completions():
