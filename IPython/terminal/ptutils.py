@@ -49,33 +49,42 @@ class IPythonPTCompleter(Completer):
         # the prompt.
         with self.shell.pt_cli.patch_stdout_context(), provisionalcompleter():
             body = document.text
-            offset = cursor_to_position(body,  document.cursor_position_row, document.cursor_position_col)
-            completions = self.ipy_completer.completions(body, offset)
-            for c in completions:
-                if not c.text:
-                    # Guard against completion machinery giving us an empty string.
-                    continue
-                text = unicodedata.normalize('NFC', c.text)
-                # When the first character of the completion has a zero length,
-                # then it's probably a decomposed unicode character. E.g. caused by
-                # the "\dot" completion. Try to compose again with the previous
-                # character.
-                if wcwidth(text[0]) == 0:
-                    if document.cursor_position + c.start > 0:
-                        char_before = body[c.start - 1]
-                        fixed_text = unicodedata.normalize('NFC', char_before + text)
+            cursor_row = document.cursor_position_row
+            cursor_col = document.cursor_position_col
+            cursor_position = document.cursor_position
+            offset = cursor_to_position(body, cursor_row , cursor_col)
+            yield from self._get_completions(body, offset, cursor_position)
 
-                        # Yield the modified completion instead, if this worked.
-                        if wcwidth(text[0:1]) == 1:
-                            yield Completion(fixed_text, start_position=c.start-offset- 1)
-                            continue
+    def _get_completions(self, body, offset, cursor_position):
+        """
+        Private equivalent of get_completions() use only for unit_testing.
+        """
+        completions = self.ipy_completer.completions(body, offset)
+        for c in completions:
+            if not c.text:
+                # Guard against completion machinery giving us an empty string.
+                continue
+            text = unicodedata.normalize('NFC', c.text)
+            # When the first character of the completion has a zero length,
+            # then it's probably a decomposed unicode character. E.g. caused by
+            # the "\dot" completion. Try to compose again with the previous
+            # character.
+            if wcwidth(text[0]) == 0:
+                if cursor_position + c.start > 0:
+                    char_before = body[c.start - 1]
+                    fixed_text = unicodedata.normalize('NFC', char_before + text)
 
-                # TODO: Use Jedi to determine meta_text
-                # (Jedi currently has a bug that results in incorrect information.)
-                # meta_text = ''
-                # yield Completion(m, start_position=start_pos,
-                #                  display_meta=meta_text)
-                yield Completion(c.text, start_position=c.start-offset)
+                    # Yield the modified completion instead, if this worked.
+                    if wcwidth(text[0:1]) == 1:
+                        yield Completion(fixed_text, start_position=c.start-offset- 1)
+                        continue
+
+            # TODO: Use Jedi to determine meta_text
+            # (Jedi currently has a bug that results in incorrect information.)
+            # meta_text = ''
+            # yield Completion(m, start_position=start_pos,
+            #                  display_meta=meta_text)
+            yield Completion(c.text, start_position=c.start-offset)
 
 class IPythonPTLexer(Lexer):
     """

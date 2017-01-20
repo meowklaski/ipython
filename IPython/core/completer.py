@@ -1267,7 +1267,7 @@ class IPCompleter(Completer):
           A list of completion matches.
         """
         warnings.warn('`Completer.complete` is pending deprecation since '
-                      'IPython 6.0 and will be replace by `Completer.completion`.',
+                      'IPython 6.0 and will be replaced by `Completer.completion`.',
                       PendingDeprecationWarning)
         # potential todo, FOLD the 3rd throw away argument of _complete
         # into the first 2 one. 
