@@ -319,6 +319,7 @@ def test_jedi():
         yield _test_complete, 'a=(1,"foo");a[0].', 'real'
         yield _test_complete, 'a=(1,"foo");a[1].', 'capitalize'
         yield _test_not_complete, 'a=(1,"foo");a[0].', 'capitalize'
+        yield _test_complete, 'im', 'import'
 
 
 

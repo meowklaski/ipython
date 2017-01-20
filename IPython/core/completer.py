@@ -782,15 +782,8 @@ class IPCompleter(Completer):
             comp += [ pre+m for m in line_magics if m.startswith(bare_text)]
         return [cast_unicode_py2(c) for c in comp]
 
-    def _jedi_matches(self, text, line_buffer, cursor_position, cursor_line, full_text):
-        if line_buffer.startswith('aimport ') or line_buffer.startswith('%aimport '):
-            return ()
-        namespaces = []
-        if self.namespace is None:
-            import __main__
-            namespaces.append(__main__.__dict__)
-        else:
-            namespaces.append(self.namespace)
+    def _jedi_matches(self, cursor_position, cursor_line, full_text):
+        namespaces = [self.namespace]
         if self.global_namespace is not None:
             namespaces.append(self.global_namespace)
 
@@ -1333,8 +1326,7 @@ class IPCompleter(Completer):
         if self.use_jedi and return_jedi_results:
             if not full_text:
                 full_text = line_buffer
-            completions = self._jedi_matches(
-                text, line_buffer, cursor_pos, cursor_line, full_text)
+            completions = self._jedi_matches(cursor_pos, cursor_line, full_text)
         if custom_res is not None:
             # did custom completers produce something?
             self.matches = custom_res
