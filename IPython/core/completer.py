@@ -798,7 +798,7 @@ class IPCompleter(Completer):
         try:
             return interpreter.completions()
         except ValueError:
-            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) < (0,10):
+            if tuple(int(i) for i in jedi.__version__.split('.')[:3]) < (0,11):
                 # we know jedi 0.9 can crash... 0.10 should not.
                 # silence 0.9 crashes.
                 return []

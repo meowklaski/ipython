@@ -291,6 +291,8 @@ def test_jedi():
 
     # both staticallay (foo defined on the same line) and dynamically.
 
+    import jedi
+    jv =  tuple(int(i) for i in jedi.__version__.split('.')[:3]) 
 
     from IPython.core.completer import provisionalcompleter, Completion
     from nose.tools import assert_in, assert_not_in
@@ -307,7 +309,13 @@ def test_jedi():
 
 
     with provisionalcompleter():
-        yield _test_complete, 'a=1;a.', 'real'
+        if jv >= (0,10):
+            # this crash old jedi versions, so let's not test it.
+            yield _test_complete, 'a=1;a.', 'real'
+        else:
+            # lets check that it just does not crash
+            yield _test_not_complete, 'a=1;a.', 'real'
+
         yield _test_complete, 'a=(1,"foo");a[0].', 'real'
         yield _test_complete, 'a=(1,"foo");a[1].', 'capitalize'
         yield _test_not_complete, 'a=(1,"foo");a[0].', 'capitalize'
